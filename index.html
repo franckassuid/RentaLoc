@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RentaLoc – Calcul de rentabilité locative</title>
+
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0b2340" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Full screen overlay for main result -->
+  <div id="yieldOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <p class="overlay-label">Rentabilité brute estimée</p>
+      <p id="overlayYieldValue" class="overlay-value">– %</p>
+      <button id="overlayCloseBtn" class="btn-primary overlay-btn">
+        Voir le détail
+      </button>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="brand">
+      <!-- Mets ton fichier de logo ici, par ex. rentaloc-logo.png -->
+      <img
+        src="/Logo - RentaLoc.png"
+        alt="RentaLoc logo"
+        class="brand-logo"
+      />
+      <div class="brand-text">
+        <h1>RentaLoc</h1>
+        <p class="app-subtitle">Calcul de rentabilité locative</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- Wizard / Steps -->
+    <form id="grossYieldForm" class="wizard">
+      <!-- Step indicators -->
+      <div class="wizard-header card">
+        <div class="wizard-header-top">
+          <span id="wizardStepLabel" class="wizard-step-label">Étape 1 / 2</span>
+          <span class="wizard-step-title" id="wizardStepTitle">
+            Revenus locatifs
+          </span>
+        </div>
+        <div class="wizard-progress">
+          <div class="wizard-progress-bar" id="wizardProgressBar"></div>
+        </div>
+      </div>
+
+      <!-- Step 1: Revenues -->
+      <section class="card step step-active" data-step="1">
+        <h2>Étape 1 – Revenus locatifs</h2>
+        <p class="step-description">
+          Indique le loyer principal et les revenus annexes (parking, cave…).
+        </p>
+
+        <div class="form-grid">
+          <!-- Monthly rent -->
+          <div class="form-field">
+            <label for="monthlyRent">Loyer mensuel principal HC (€)</label>
+            <input
+              id="monthlyRent"
+              name="monthlyRent"
+              type="number"
+              min="0"
+              required
+              placeholder="400"
+            />
+            <small>Loyer hors charges, sans parking ni cave.</small>
+          </div>
+
+          <!-- Extra incomes -->
+          <div class="form-field">
+            <label for="monthlyExtraIncome">Revenus annexes mensuels (€)</label>
+            <input
+              id="monthlyExtraIncome"
+              name="monthlyExtraIncome"
+              type="number"
+              min="0"
+              value="0"
+              placeholder="40"
+            />
+            <small>Parking, cave, box… (0 si aucun).</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Project cost -->
+      <section class="card step hidden" data-step="2">
+        <h2>Étape 2 – Coût du projet</h2>
+        <p class="step-description">
+          Indique le prix du bien, les frais de notaire estimés et les travaux initiaux.
+        </p>
+
+        <div class="form-grid">
+          <!-- Property price -->
+          <div class="form-field">
+            <label for="propertyPrice">Prix du bien (€)</label>
+            <input
+              id="propertyPrice"
+              name="propertyPrice"
+              type="number"
+              min="0"
+              required
+              placeholder="140000"
+            />
+            <small>Prix net vendeur (hors frais de notaire).</small>
+          </div>
+
+          <!-- Initial works -->
+          <div class="form-field">
+            <label for="initialWorks">Travaux initiaux (€)</label>
+            <input
+              id="initialWorks"
+              name="initialWorks"
+              type="number"
+              min="0"
+              value="0"
+              placeholder="10000"
+            />
+            <small>Rénovation, mise aux normes, ameublement de départ…</small>
+          </div>
+
+          <!-- Notary fees slider -->
+          <div class="form-field form-field-full">
+            <label for="notaryRate">
+              Frais de notaire (%)
+            </label>
+            <input
+              id="notaryRate"
+              name="notaryRate"
+              type="range"
+              min="2"
+              max="10"
+              step="0.1"
+              value="7.5"
+            />
+            <div class="range-line">
+              <span>2%</span>
+              <span>10%</span>
+            </div>
+            <div class="range-display">
+              Taux actuel : <span id="notaryRateValue">7.5</span>%
+            </div>
+            <small>
+              Dans l'ancien, les frais sont généralement entre 7 et 8 % du prix du bien.
+            </small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Wizard navigation -->
+      <div class="wizard-nav card">
+        <button
+          type="button"
+          id="prevStepBtn"
+          class="btn-secondary hidden"
+        >
+          Précédent
+        </button>
+
+        <button
+          type="button"
+          id="nextStepBtn"
+          class="btn-primary"
+        >
+          Suivant
+        </button>
+
+        <button
+          type="submit"
+          id="submitBtn"
+          class="btn-primary hidden"
+        >
+          Calculer la rentabilité brute
+        </button>
+      </div>
+    </form>
+
+    <!-- Results -->
+    <section id="resultsCard" class="card card-result hidden">
+      <h2>Résultats</h2>
+
+      <div class="result-main">
+        <p class="result-title">Rentabilité brute</p>
+        <p id="grossYieldValue" class="result-value">– %</p>
+      </div>
+
+      <div class="result-details">
+        <div class="result-row">
+          <span>Loyer mensuel total</span>
+          <span id="monthlyTotalRentValue">– €</span>
+        </div>
+        <div class="result-row">
+          <span>Loyers annuels</span>
+          <span id="yearlyRentValue">– €</span>
+        </div>
+        <div class="result-row">
+          <span>Coût total du projet</span>
+          <span id="totalCostValue">– €</span>
+        </div>
+        <div class="result-row">
+          <span>Frais de notaire estimés</span>
+          <span id="notaryFeesValue">– €</span>
+        </div>
+        <div class="result-row">
+          <span>Travaux initiaux</span>
+          <span id="initialWorksValue">– €</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>RentaLoc · V0 · Calcul simple de rentabilité brute (sans charges ni fiscalité).</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
