@@ -1,11 +1,11 @@
-const CACHE_NAME = "rentaloc-v1";
+const CACHE_NAME = "rentaloc-v2";
 const ASSETS = [
   "/",
   "/index.html",
-  "/styles.css",
-  "/app.js",
+  "/assets/css/styles.css",
+  "/assets/js/app.js",
   "/manifest.webmanifest",
-  "/Logo - RentaLoc.png",
+  "/assets/img/Logo - RentaLoc.png",
 ];
 
 // Precache core assets
