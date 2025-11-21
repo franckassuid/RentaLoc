@@ -608,6 +608,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   if (debtInfoBtn && debtTooltip) {
+    hideDebtTooltip();
     debtInfoBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       debtTooltip.classList.toggle("visible");

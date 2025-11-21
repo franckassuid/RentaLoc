@@ -4,7 +4,7 @@ const CACHE_NAME = "rental-pwa-v1";
 const URLS_TO_CACHE = [
   "./",
   "./index.html",
-  "./style.css",
+  "./assets/css/styles.css",
   "./app.js",
   "./simulator.js",
   "./manifest.webmanifest",

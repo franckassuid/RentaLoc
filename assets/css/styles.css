@@ -104,13 +104,12 @@ body {
 }
 
 .brand-logo {
-  width: 65px;
-  height: 65px;
-  /* padding: 5px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   border-radius: 12px;
   border: 1px solid var(--color-border);
-  background: rgba(2, 6, 23, 0.6); */
+  background: rgba(2, 6, 23, 0.6);
 }
 
 .brand-text h1 {
@@ -240,6 +239,7 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-sm);
+  flex-wrap: wrap;
 }
 
 .wizard-nav-left {
@@ -300,13 +300,7 @@ button {
   transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
-button#submitBtn {
-  background: var(--color-accent);
-  color: #022c22;
-  font-weight: 600;
-  box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
-}
-
+button#submitBtn,
 button.primary {
   background: var(--color-accent);
   color: #022c22;
@@ -314,7 +308,8 @@ button.primary {
   box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
 }
 
-button#submitBtn:hover {
+button#submitBtn:hover,
+button.primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 14px 30px rgba(34, 197, 94, 0.4);
 }
@@ -341,6 +336,86 @@ button.secondary:hover {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+}
+
+.label-with-help {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.info-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 700;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.info-icon:hover,
+.info-icon:focus-visible {
+  border-color: var(--color-accent);
+  background: rgba(34, 197, 94, 0.2);
+  transform: translateY(-1px);
+}
+
+.tooltip {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #0b1324;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  padding: 0.75rem 0.85rem;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  width: min(320px, 80vw);
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
+  z-index: 10;
+}
+
+.tooltip.visible,
+.label-with-help:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.icon-btn {
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.icon-btn span {
+  font-size: 1rem;
+}
+
+.icon-btn.danger {
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #f87171;
 }
 
 .results-card {
@@ -458,7 +533,7 @@ button.secondary:hover {
 }
 
 .modal {
-  width: 90%;
+  width: 100%;
   max-width: 480px;
   background: #020617;
   border-radius: 16px;
@@ -480,17 +555,6 @@ button.secondary:hover {
 .modal-header h2 {
   margin: 0;
   font-size: 1.1rem;
-}
-
-.modal-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.compact {
-  padding: 0.4rem 0.8rem;
-  font-size: 0.85rem;
 }
 
 .modal-close {
@@ -534,19 +598,43 @@ button.secondary:hover {
 
 .modal-footer {
   display: flex;
-  justify-content: space-between; 
+  justify-content: flex-end;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
-}
-
-.danger{
-  background-color: #0e2049;
-  color :#af2626;
 }
 
 @media (min-width: 768px) {
   .app-main {
     grid-template-columns: 1.1fr 1fr;
     align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .wizard-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wizard-nav-left,
+  .wizard-nav-right {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  .wizard-nav-left button,
+  .wizard-nav-right button {
+    width: 100%;
   }
 }
