@@ -8,7 +8,9 @@ const URLS_TO_CACHE = [
   "./app.js",
   "./simulator.js",
   "./manifest.webmanifest",
-  "./assets/img/Logo - RentaLoc.png"
+  "./assets/img/Logo - RentaLoc.png",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 // Install event
