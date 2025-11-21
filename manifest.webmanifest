@@ -1,20 +1,20 @@
 {
-  "name": "RentaLoc – Calcul de rentabilité locative",
+  "name": "RentaLoc – Simulateur de rentabilité locative",
   "short_name": "RentaLoc",
+  "lang": "fr-FR",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#020617",
-  "theme_color": "#0b2340",
-  "description": "Calculer rapidement la rentabilité brute d'un bien locatif.",
+  "theme_color": "#22c55e",
   "icons": [
     {
-      "src": "assets/img/Logo - RentaLoc.png",
-      "sizes": "512x512",
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "assets/img/Logo - RentaLoc.png",
-      "sizes": "192x192",
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]

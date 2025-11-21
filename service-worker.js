@@ -2,8 +2,9 @@ const CACHE_NAME = "rentaloc-v2";
 const ASSETS = [
   "/",
   "/index.html",
-  "/assets/css/styles.css",
-  "/assets/js/app.js",
+  "/style.css",
+  "/app.js",
+  "/simulator.js",
   "/manifest.webmanifest",
   "/assets/img/Logo - RentaLoc.png",
 ];

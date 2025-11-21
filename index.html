@@ -1,225 +1,225 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RentaLoc – Calcul de rentabilité locative</title>
-
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#0b2340" />
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <meta charset="UTF-8">
+  <title>RentaLoc – Simulateur de rentabilité locative</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#22c55e">
+  <link rel="icon" type="image/png" href="./assets/img/Logo - RentaLoc.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
 <body>
-  <!-- Full screen overlay for main result -->
+  <!-- Popin résultat principal -->
   <div id="yieldOverlay" class="overlay hidden">
     <div class="overlay-content">
       <p class="overlay-label">Rentabilité brute estimée</p>
-      <p id="overlayYieldValue" class="overlay-value">– %</p>
-      <button id="overlayCloseBtn" class="btn-primary overlay-btn">
-        Voir le détail
-      </button>
+      <p id="overlayYieldValue" class="overlay-value">–</p>
+      <button id="overlayCloseBtn" class="primary overlay-btn">Voir le détail</button>
     </div>
   </div>
 
   <header class="app-header">
-    <div class="brand">
-      <!-- Mets ton fichier de logo ici, par ex. rentaloc-logo.png -->
-      <img
-        src="assets/img/Logo - RentaLoc.png"
-        alt="RentaLoc logo"
-        class="brand-logo"
-      />
+    <div class="app-header-main brand">
+      <img src="./assets/img/Logo - RentaLoc.png" alt="RentaLoc" class="brand-logo">
       <div class="brand-text">
         <h1>RentaLoc</h1>
-        <p class="app-subtitle">Calcul de rentabilité locative</p>
+        <p>Simulateur de rentabilité locative.</p>
       </div>
     </div>
+    <button id="profileBtn" class="profile-btn" type="button">
+      Profil
+    </button>
   </header>
 
   <main class="app-main">
-    <!-- Wizard / Steps -->
-    <form id="grossYieldForm" class="wizard">
-      <!-- Step indicators -->
-      <div class="wizard-header card">
+    <form id="property-form" class="wizard">
+      <div class="card wizard-header">
         <div class="wizard-header-top">
           <span id="wizardStepLabel" class="wizard-step-label">Étape 1 / 2</span>
-          <span class="wizard-step-title" id="wizardStepTitle">
-            Revenus locatifs
-          </span>
+          <span class="wizard-step-title" id="wizardStepTitle">Acquisition et financement</span>
         </div>
         <div class="wizard-progress">
           <div class="wizard-progress-bar" id="wizardProgressBar"></div>
         </div>
       </div>
 
-      <!-- Step 1: Revenues -->
       <section class="card step step-active" data-step="1">
-        <h2>Étape 1 – Revenus locatifs</h2>
+        <h2>Étape 1 – Acquisition et financement</h2>
         <p class="step-description">
-          Indique le loyer principal et les revenus annexes (parking, cave…).
+          Renseigne le coût total du projet et l'annuité du crédit.
         </p>
-
         <div class="form-grid">
-          <!-- Monthly rent -->
-          <div class="form-field">
-            <label for="monthlyRent">Loyer mensuel principal HC (€)</label>
-            <input
-              id="monthlyRent"
-              name="monthlyRent"
-              type="number"
-              min="0"
-              required
-              placeholder="400"
-            />
-            <small>Loyer hors charges, sans parking ni cave.</small>
+          <div class="form-group">
+            <label for="purchasePrice">Prix d'achat (EUR)</label>
+            <input type="number" id="purchasePrice" required min="0" step="1">
           </div>
 
-          <!-- Extra incomes -->
-          <div class="form-field">
-            <label for="monthlyExtraIncome">Revenus annexes mensuels (€)</label>
-            <input
-              id="monthlyExtraIncome"
-              name="monthlyExtraIncome"
-              type="number"
-              min="0"
-              value="0"
-              placeholder="40"
-            />
-            <small>Parking, cave, box… (0 si aucun).</small>
+          <div class="form-group">
+            <label for="buyingCosts">Frais d'acquisition (EUR)</label>
+            <input type="number" id="buyingCosts" placeholder="Notaire, agence..." min="0" step="1">
           </div>
         </div>
       </section>
 
-      <!-- Step 2: Project cost -->
-      <section class="card step hidden" data-step="2">
-        <h2>Étape 2 – Coût du projet</h2>
-        <p class="step-description">
-          Indique le prix du bien, les frais de notaire estimés et les travaux initiaux.
-        </p>
-
+      <section class="card step" data-step="2">
+        <h2>Étape 2 – Revenus et charges</h2>
+        <p class="step-description">Indique les loyers mensuels et les charges non récupérables.</p>
         <div class="form-grid">
-          <!-- Property price -->
-          <div class="form-field">
-            <label for="propertyPrice">Prix du bien (€)</label>
-            <input
-              id="propertyPrice"
-              name="propertyPrice"
-              type="number"
-              min="0"
-              required
-              placeholder="140000"
-            />
-            <small>Prix net vendeur (hors frais de notaire).</small>
+          <div class="form-group">
+            <label for="monthlyRent">Loyer mensuel (EUR)</label>
+            <input type="number" id="monthlyRent" required min="0" step="1">
           </div>
 
-          <!-- Initial works -->
-          <div class="form-field">
-            <label for="initialWorks">Travaux initiaux (€)</label>
-            <input
-              id="initialWorks"
-              name="initialWorks"
-              type="number"
-              min="0"
-              value="0"
-              placeholder="10000"
-            />
-            <small>Rénovation, mise aux normes, ameublement de départ…</small>
+          <div class="form-group">
+            <label for="monthlyCharges">Charges mensuelles (EUR)</label>
+            <input type="number" id="monthlyCharges" placeholder="Charges non récup., TF, assurance..." min="0" step="1">
           </div>
+        </div>
 
-          <!-- Notary fees slider -->
-          <div class="form-field form-field-full">
-            <label for="notaryRate">
-              Frais de notaire (%)
-            </label>
-            <input
-              id="notaryRate"
-              name="notaryRate"
-              type="range"
-              min="2"
-              max="10"
-              step="0.1"
-              value="7.5"
-            />
-            <div class="range-line">
-              <span>2%</span>
-              <span>10%</span>
+        <div class="optional-group">
+          <button type="button" class="ghost" id="toggleDebtField">Ajouter l'annuité de crédit (optionnel)</button>
+          <div class="form-group hidden" id="debtFieldWrap">
+            <div class="label-with-help">
+              <label for="annualDebtService">Annuité de crédit (EUR/an)</label>
+              <button
+                type="button"
+                class="info-icon"
+                id="debtInfo"
+                aria-label="Qu'est-ce que l'annuité de crédit ?"
+                aria-describedby="debtTooltip"
+              >?</button>
+              <div class="tooltip" id="debtTooltip" role="tooltip">
+                Total des remboursements du prêt sur 1 an.<br>
+                C’est 12 mensualités, incluant capital + intérêts + assurance.<br>
+                Sert à calculer le cashflow (ce que le bien te rapporte ou te coûte).
+              </div>
             </div>
-            <div class="range-display">
-              Taux actuel : <span id="notaryRateValue">7.5</span>%
-            </div>
-            <small>
-              Dans l'ancien, les frais sont généralement entre 7 et 8 % du prix du bien.
-            </small>
+            <input type="number" id="annualDebtService" placeholder="Mensualités × 12" min="0" step="1">
           </div>
         </div>
       </section>
 
-      <!-- Wizard navigation -->
       <div class="wizard-nav card">
-        <button
-          type="button"
-          id="prevStepBtn"
-          class="btn-secondary hidden"
-        >
-          Précédent
-        </button>
-
-        <button
-          type="button"
-          id="nextStepBtn"
-          class="btn-primary"
-        >
-          Suivant
-        </button>
-
-        <button
-          type="submit"
-          id="submitBtn"
-          class="btn-primary hidden"
-        >
-          Calculer la rentabilité brute
-        </button>
+        <div class="wizard-nav-left">
+          <button type="reset" id="resetBtn" class="icon-btn danger" aria-label="Réinitialiser">
+            <span aria-hidden="true">↻</span>
+          </button>
+        </div>
+        <div class="wizard-nav-right">
+          <button type="button" id="prevStepBtn" class="secondary">Précédent</button>
+          <button type="button" id="nextStepBtn">Suivant</button>
+          <button type="submit" id="submitBtn" class="primary">Calculer</button>
+        </div>
       </div>
     </form>
 
-    <!-- Results -->
-    <section id="resultsCard" class="card card-result hidden">
+    <section class="card results-card hidden" id="results">
       <h2>Résultats</h2>
-
-      <div class="result-main">
-        <p class="result-title">Rentabilité brute</p>
-        <p id="grossYieldValue" class="result-value">– %</p>
+      <div class="profile-summary" id="profileSummary">
+        Profil utilisé : <span id="profileSummaryText">–</span>
       </div>
 
-      <div class="result-details">
-        <div class="result-row">
-          <span>Loyer mensuel total</span>
-          <span id="monthlyTotalRentValue">– €</span>
+      <div class="results-grid">
+        <div class="result-item">
+          <span class="result-label">Rentabilité brute</span>
+          <span class="result-value" id="grossYield">–</span>
         </div>
-        <div class="result-row">
-          <span>Loyers annuels</span>
-          <span id="yearlyRentValue">– €</span>
+        <div class="result-item net-required">
+          <span class="result-label">Rentabilité nette (avant impôts)</span>
+          <span class="result-value" id="netYield">–</span>
         </div>
-        <div class="result-row">
-          <span>Coût total du projet</span>
-          <span id="totalCostValue">– €</span>
+        <div class="result-item net-required">
+          <span class="result-label">
+            Rentabilité nette-nette (après impôts)
+          </span>
+          <span class="result-value" id="netNetYield">–</span>
         </div>
-        <div class="result-row">
-          <span>Frais de notaire estimés</span>
-          <span id="notaryFeesValue">– €</span>
+        <div class="result-item">
+          <span class="result-label">Cashflow mensuel (avant impôts)</span>
+          <span class="result-value" id="cfBeforeTax">–</span>
         </div>
-        <div class="result-row">
-          <span>Travaux initiaux</span>
-          <span id="initialWorksValue">– €</span>
+        <div class="result-item net-required">
+          <span class="result-label">Cashflow mensuel (après impôts)</span>
+          <span class="result-value" id="cfAfterTax">–</span>
+        </div>
+        <div class="result-item">
+          <span class="result-label">Risque de cashflow négatif</span>
+          <span class="result-value" id="riskRatio">–</span>
         </div>
       </div>
+
+      <p class="net-warning hidden" id="netWarning">
+        Profil incomplet : renseigne ton profil pour afficher la fiscalité (renta nette et nette-nette).
+      </p>
+
+      <p class="results-note">
+        Modèle simplifié, à vocation pédagogique. La fiscalité est approximée (abattements micro / réel + TMI + PS).
+      </p>
     </section>
   </main>
 
   <footer class="app-footer">
-    <p>RentaLoc · V0 · Calcul simple de rentabilité brute (sans charges ni fiscalité).</p>
+    <p>RentaLoc©️ – V1.0</p>
   </footer>
 
-  <script src="assets/js/app.js"></script>
+  <!-- Modale profil -->
+  <div class="modal-backdrop" id="profileModalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+      <header class="modal-header">
+        <h2 id="profileModalTitle">Mon profil investisseur</h2>
+        <button type="button" class="modal-close" id="profileModalClose">&times;</button>
+      </header>
+
+      <form id="profile-form" class="modal-body">
+        <fieldset class="fieldset">
+          <legend>Type de location</legend>
+          <label class="radio">
+            <input type="radio" name="rentalType" value="nu">
+            <span>Location nue</span>
+          </label>
+          <label class="radio">
+            <input type="radio" name="rentalType" value="meuble">
+            <span>Location meublée (LMNP)</span>
+          </label>
+        </fieldset>
+
+        <div class="form-group">
+          <label for="taxRegime">Régime fiscal</label>
+          <select id="taxRegime">
+            <!-- options remplies en JS selon rentalType -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tmi">Tranche marginale d'imposition</label>
+          <select id="tmi">
+            <option value="0">0 %</option>
+            <option value="11">11 %</option>
+            <option value="30">30 %</option>
+            <option value="41">41 %</option>
+            <option value="45">45 %</option>
+          </select>
+        </div>
+
+        <label class="checkbox">
+          <input type="checkbox" id="includeSocialTaxes" checked>
+          <span>Inclure les prélèvements sociaux (17,2 %)</span>
+        </label>
+
+        <div class="form-group">
+          <label for="vacancyRate">Vacance locative estimée (%)</label>
+          <input type="number" id="vacancyRate" min="0" max="50" step="1">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="secondary" id="profileResetBtn">Réinitialiser</button>
+          <button type="submit">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
