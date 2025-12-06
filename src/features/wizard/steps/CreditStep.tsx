@@ -14,6 +14,7 @@ export const CreditStep = () => {
                 value={input.loanAmount}
                 onChange={(e) => updateField('loanAmount', Number(e.target.value))}
                 type="number"
+                step="1000"
                 icon={<LandmarkIcon size={18} />}
                 suffix="€"
             />
@@ -22,6 +23,7 @@ export const CreditStep = () => {
                 value={input.loanDurationYears}
                 onChange={(e) => updateField('loanDurationYears', Number(e.target.value))}
                 type="number"
+                step="1"
                 icon={<CalendarIcon size={18} />}
                 suffix="ans"
             />
@@ -30,7 +32,7 @@ export const CreditStep = () => {
                 value={input.loanRate}
                 onChange={(e) => updateField('loanRate', Number(e.target.value))}
                 type="number"
-                step="0.01"
+                step="0.05"
                 icon={<PercentIcon size={18} />}
                 suffix="%"
             />
@@ -48,6 +50,7 @@ export const CreditStep = () => {
                 value={input.personalCashInvested}
                 onChange={(e) => updateField('personalCashInvested', Number(e.target.value))}
                 type="number"
+                step="1000"
                 icon={<LandmarkIcon size={18} />} // Reusing Landmark for now, or could import Coins
                 suffix="€"
             />

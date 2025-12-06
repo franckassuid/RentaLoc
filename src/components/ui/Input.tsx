@@ -8,6 +8,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     suffix?: string;
 }
 
+import { ChevronUpIcon, ChevronDownIcon } from 'lucide-react';
+
 export const Input: React.FC<InputProps> = ({
     label,
     error,
@@ -15,9 +17,32 @@ export const Input: React.FC<InputProps> = ({
     suffix,
     className = '',
     id,
+    type,
+    step,
     ...props
 }) => {
     const inputId = id || props.name || Math.random().toString(36).substr(2, 9);
+    const isNumber = type === 'number';
+
+    const handleStep = (direction: 1 | -1) => {
+        // Create synthetic event to trigger onChange
+        const currentVal = Number(props.value) || 0;
+        const stepVal = Number(step) || 1;
+
+        let newVal = currentVal + (stepVal * direction);
+
+        // Handle floating point precision issues
+        if (!Number.isInteger(stepVal)) {
+            newVal = parseFloat(newVal.toFixed(2));
+        }
+
+        // Mock event object
+        const mockEvent = {
+            target: { value: newVal.toString() }
+        } as React.ChangeEvent<HTMLInputElement>;
+
+        props.onChange?.(mockEvent);
+    };
 
     return (
         <div className={`input-wrapper ${className}`}>
@@ -25,12 +50,27 @@ export const Input: React.FC<InputProps> = ({
 
             <div className="input-container">
                 {icon && <div className="input-icon">{icon}</div>}
+
                 <input
                     id={inputId}
-                    className={`glass-input ${icon ? 'has-icon' : ''} ${suffix ? 'has-suffix' : ''} ${error ? 'input-error' : ''}`}
+                    type={type}
+                    step={step}
+                    className={`glass-input ${icon ? 'has-icon' : ''} ${suffix ? 'has-suffix' : ''} ${error ? 'input-error' : ''} ${isNumber ? 'has-controls' : ''}`}
                     {...props}
                 />
+
                 {suffix && <span className="input-suffix">{suffix}</span>}
+
+                {isNumber && (
+                    <div className="input-controls">
+                        <button type="button" onClick={() => handleStep(1)} className="control-btn up" tabIndex={-1}>
+                            <ChevronUpIcon size={14} />
+                        </button>
+                        <button type="button" onClick={() => handleStep(-1)} className="control-btn down" tabIndex={-1}>
+                            <ChevronDownIcon size={14} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {error && <p className="input-error-msg">{error}</p>}

@@ -20,6 +20,7 @@ export const PurchaseStep = () => {
                 value={input.purchasePrice}
                 onChange={(e) => updateField('purchasePrice', Number(e.target.value))}
                 type="number"
+                step="1000"
                 icon={<HomeIcon size={18} />}
                 suffix="€"
             />
@@ -28,6 +29,7 @@ export const PurchaseStep = () => {
                 value={input.agencyFees}
                 onChange={(e) => updateField('agencyFees', Number(e.target.value))}
                 type="number"
+                step="100"
                 icon={<BuildingIcon size={18} />} // Using local fallback icon if needed, but imported correctly below
                 suffix="€"
             />
@@ -45,6 +47,7 @@ export const PurchaseStep = () => {
                 value={input.worksCost}
                 onChange={(e) => updateField('worksCost', Number(e.target.value))}
                 type="number"
+                step="500"
                 icon={<HammerIcon size={18} />}
                 suffix="€"
             />
@@ -53,6 +56,7 @@ export const PurchaseStep = () => {
                 value={input.furnitureCost}
                 onChange={(e) => updateField('furnitureCost', Number(e.target.value))}
                 type="number"
+                step="500"
                 icon={<SofaIcon size={18} />}
                 suffix="€"
             />
@@ -61,6 +65,7 @@ export const PurchaseStep = () => {
                 value={input.guaranteeFees}
                 onChange={(e) => updateField('guaranteeFees', Number(e.target.value))}
                 type="number"
+                step="100"
                 icon={<ShieldCheckIcon size={18} />}
                 suffix="€"
             />

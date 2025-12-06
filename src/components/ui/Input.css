@@ -55,8 +55,91 @@
     border-color: var(--color-danger);
 }
 
+
 .input-error-msg {
     font-size: 0.75rem;
     color: var(--color-danger);
     margin: 0;
+}
+
+/* Hide default spinners in Webkit */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.has-controls {
+    padding-right: 3rem !important;
+    /* Make room for controls */
+}
+
+/* Adjust if has suffix AND controls */
+.has-suffix.has-controls {
+    padding-right: 4.5rem !important;
+    /* suffix + controls space */
+}
+
+/* Move suffix slightly left if controls present */
+.has-suffix.has-controls+.input-suffix {
+    right: 3rem;
+    /* Push suffix left of controls */
+}
+
+/* If ONLY suffix (css rule logic above might be tricky with sibling selector so let's rely on JS class order or specificity) */
+/* Actually, the Structure is: Input + Suffix + Controls. */
+/* So .input-suffix is sibling of input. */
+
+.input-suffix {
+    position: absolute;
+    right: var(--spacing-md);
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    pointer-events: none;
+    transition: all 0.2s;
+}
+
+.has-controls~.input-suffix {
+    right: 2.22rem;
+    /* Move suffix to left of controls */
+}
+
+.input-controls {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    bottom: 4px;
+    width: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.control-btn {
+    flex: 1;
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    /* Subtle bg */
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--color-primary);
+}
+
+.control-btn:active {
+    background: var(--color-primary);
+    color: white;
 }

@@ -14,6 +14,7 @@ export const RentStep = () => {
                 value={input.monthlyRent}
                 onChange={(e) => updateField('monthlyRent', Number(e.target.value))}
                 type="number"
+                step="10"
                 icon={<BanknoteIcon size={18} />}
                 suffix="€"
             />
@@ -22,6 +23,7 @@ export const RentStep = () => {
                 value={input.extraMonthlyIncome}
                 onChange={(e) => updateField('extraMonthlyIncome', Number(e.target.value))}
                 type="number"
+                step="10"
                 icon={<ParkingCircleIcon size={18} />}
                 suffix="€"
             />
@@ -30,6 +32,7 @@ export const RentStep = () => {
                 value={input.vacancyRate}
                 onChange={(e) => updateField('vacancyRate', Number(e.target.value))}
                 type="number"
+                step="1"
                 icon={<AlertTriangleIcon size={18} />}
                 suffix="%"
             />

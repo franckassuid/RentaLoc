@@ -35,7 +35,7 @@ const MainContent = () => {
   );
 
   return (
-    <Layout showLogo={view !== 'home'}>
+    <Layout showLogo={view !== 'home'} onLogoClick={() => setView('home')}>
       <div className="top-nav-actions">
         {view !== 'home' && (
           <Button variant="ghost" size="sm" onClick={() => setView('home')}>

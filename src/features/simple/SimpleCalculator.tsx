@@ -32,6 +32,7 @@ export const SimpleCalculator = ({ onSwitchToComplex }: { onSwitchToComplex: () 
                     value={price}
                     onChange={(e) => setPrice(Number(e.target.value))}
                     type="number"
+                    step="1000"
                     icon={<CalculatorIcon size={18} />}
                     suffix="€"
                 />
@@ -41,6 +42,7 @@ export const SimpleCalculator = ({ onSwitchToComplex }: { onSwitchToComplex: () 
                     value={rent}
                     onChange={(e) => setRent(Number(e.target.value))}
                     type="number"
+                    step="10"
                     icon={<EuroIcon size={18} />}
                     suffix="€"
                 />

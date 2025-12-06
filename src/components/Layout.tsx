@@ -3,17 +3,25 @@ import React from 'react';
 interface LayoutProps {
     children: React.ReactNode;
     showLogo?: boolean;
+    onLogoClick?: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, showLogo = true }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, showLogo = true, onLogoClick }) => {
     return (
         <div className="layout">
             <header className="header glass-panel">
                 <div className="container header-content">
                     {showLogo && (
-                        <div className="logo">
-                            <img src="/logo.png" alt="Rentaloc Logo" className="logo-icon" style={{ height: '48px', width: 'auto', maxHeight: '48px', objectFit: 'contain' }} />
-                        </div>
+                        <button
+                            className="logo-btn"
+                            onClick={onLogoClick}
+                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                            aria-label="Retour à l'accueil"
+                        >
+                            <div className="logo">
+                                <img src="/logo.png" alt="Rentaloc Logo" className="logo-icon" style={{ height: '48px', width: 'auto', maxHeight: '48px', objectFit: 'contain' }} />
+                            </div>
+                        </button>
                     )}
                 </div>
             </header>

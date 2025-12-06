@@ -14,6 +14,7 @@ export const ChargesStep = () => {
                 value={input.taxeFonciere}
                 onChange={(e) => updateField('taxeFonciere', Number(e.target.value))}
                 type="number"
+                step="10"
                 icon={<LandmarkIcon size={18} />}
                 suffix="€"
             />
@@ -22,6 +23,7 @@ export const ChargesStep = () => {
                 value={input.coOwnershipNonRecoverable}
                 onChange={(e) => updateField('coOwnershipNonRecoverable', Number(e.target.value))}
                 type="number"
+                step="10"
                 icon={<UsersIcon size={18} />}
                 suffix="€"
             />
@@ -30,6 +32,7 @@ export const ChargesStep = () => {
                 value={input.insurancePNO}
                 onChange={(e) => updateField('insurancePNO', Number(e.target.value))}
                 type="number"
+                step="5"
                 icon={<UmbrellaIcon size={18} />}
                 suffix="€"
             />
@@ -38,6 +41,7 @@ export const ChargesStep = () => {
                 value={input.insuranceGLI}
                 onChange={(e) => updateField('insuranceGLI', Number(e.target.value))}
                 type="number"
+                step="5"
                 icon={<UmbrellaIcon size={18} />}
                 suffix="€"
             />
@@ -46,6 +50,7 @@ export const ChargesStep = () => {
                 value={input.maintenanceBudget}
                 onChange={(e) => updateField('maintenanceBudget', Number(e.target.value))}
                 type="number"
+                step="50"
                 icon={<WrenchIcon size={18} />}
                 suffix="€"
             />
