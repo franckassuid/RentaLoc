@@ -7,6 +7,7 @@ import { ProfileModal } from './features/profile/ProfileModal';
 import { UserIcon, LayoutGridIcon, ActivityIcon } from 'lucide-react';
 import { Button } from './components/ui/Button';
 import { TrashIcon, ClockIcon } from 'lucide-react';
+import { InstallPrompt } from './components/InstallPrompt';
 // Inner component to access Context (which is provided in App)
 const MainContent = () => {
   const [view, setView] = useState<'home' | 'simple' | 'complex'>('home');
@@ -89,6 +90,8 @@ const MainContent = () => {
               </div>
             </div>
           )}
+
+          <InstallPrompt />
         </div>
       )}
 
