@@ -13,17 +13,20 @@ export default defineConfig({
         name: 'Rentaloc V2 - Real Estate Calculator',
         short_name: 'Rentaloc',
         description: 'Calculate real estate profitability instantly',
-        theme_color: '#ffffff',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
         icons: [
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
