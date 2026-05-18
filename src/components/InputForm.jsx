@@ -1,0 +1,240 @@
+import { useState } from 'react';
+import { InputField } from './InputField';
+import { AutoField } from './AutoField';
+import { getLights } from '../compute';
+import { formatCurrency } from '../compute';
+
+function Section({ title, icon, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        className="section-header collapsible-trigger w-full px-1"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span>
+          {icon} {title}
+        </span>
+        <span
+          className="text-zinc-400 text-sm transition-transform duration-200"
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        >
+          ▼
+        </span>
+      </button>
+
+      {open && (
+        <div className="pt-4 space-y-4">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function InputForm({ inputs, onChange, results }) {
+  const lights = getLights(results);
+  // Un seul tooltip ouvert à la fois
+  const [openTooltip, setOpenTooltip] = useState(null);
+
+  // Raccourci pour passer les props tooltip à chaque InputField
+  const tip = { openTooltip, setOpenTooltip };
+
+  return (
+    <div className="space-y-3">
+      {/* Section 1: Le bien */}
+      <Section title="Le bien" icon="🏠" defaultOpen={true}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nom et Ville : pas de tooltip */}
+          <InputField
+            label="Nom du bien"
+            field="nom"
+            value={inputs.nom}
+            onChange={onChange}
+            type="text"
+            placeholder="Bien A"
+          />
+          <InputField
+            label="Ville"
+            field="ville"
+            value={inputs.ville}
+            onChange={onChange}
+            type="text"
+            placeholder="Amiens"
+          />
+          <InputField
+            label="Prix FAI"
+            field="prixFAI"
+            value={inputs.prixFAI}
+            onChange={onChange}
+            suffix="€"
+            {...tip}
+          />
+          <AutoField
+            label="→ Frais notaire"
+            value={formatCurrency(results.fraisNotaire)}
+          />
+          <InputField
+            label="Taux notaire"
+            field="tauxNotaire"
+            value={inputs.tauxNotaire}
+            onChange={onChange}
+            suffix="%"
+            {...tip}
+          />
+          <InputField
+            label="Ameublement / rafraîchissement"
+            field="budgetMobilier"
+            value={inputs.budgetMobilier}
+            onChange={onChange}
+            suffix="€"
+            {...tip}
+          />
+          <AutoField
+            label="→ Budget total"
+            value={formatCurrency(results.budgetTotal)}
+            className="md:col-span-2"
+          />
+        </div>
+      </Section>
+
+      {/* Section 2: Revenus */}
+      <Section title="Revenus" icon="💶">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Loyer mensuel HC : pas de tooltip */}
+          <InputField
+            label="Loyer mensuel HC"
+            field="loyerMensuel"
+            value={inputs.loyerMensuel}
+            onChange={onChange}
+            suffix="€/mois"
+          />
+          <InputField
+            label="Vacance locative"
+            field="vacanceMois"
+            value={inputs.vacanceMois}
+            onChange={onChange}
+            suffix="mois/an"
+            {...tip}
+          />
+          <AutoField
+            label="→ Loyer annuel corrigé"
+            value={formatCurrency(results.loyerAnnuelCorrige)}
+            className="md:col-span-2"
+          />
+        </div>
+      </Section>
+
+      {/* Section 3: Charges */}
+      <Section title="Charges annuelles" icon="💸">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputField
+            label="Charges copropriété"
+            field="chargesCopro"
+            value={inputs.chargesCopro}
+            onChange={onChange}
+            suffix="€/an"
+            {...tip}
+          />
+          <InputField
+            label="Taxe foncière"
+            field="taxeFonciere"
+            value={inputs.taxeFonciere}
+            onChange={onChange}
+            suffix="€/an"
+            {...tip}
+          />
+          <InputField
+            label="CFE"
+            field="cfe"
+            value={inputs.cfe}
+            onChange={onChange}
+            suffix="€/an"
+            {...tip}
+          />
+          <InputField
+            label="Assurance PNO"
+            field="assurancePNO"
+            value={inputs.assurancePNO}
+            onChange={onChange}
+            suffix="€/an"
+            {...tip}
+          />
+          <InputField
+            label="Frais de gestion"
+            field="fraisGestion"
+            value={inputs.fraisGestion}
+            onChange={onChange}
+            suffix="%"
+            {...tip}
+          />
+          <InputField
+            label="Provision travaux"
+            field="provisionTravaux"
+            value={inputs.provisionTravaux}
+            onChange={onChange}
+            suffix="€/an"
+            {...tip}
+          />
+          <InputField
+            label="Frais comptable"
+            field="fraisComptable"
+            value={inputs.fraisComptable}
+            onChange={onChange}
+            suffix="€/an"
+            className="md:col-span-2"
+            {...tip}
+          />
+        </div>
+      </Section>
+
+      {/* Section 4: Financement */}
+      <Section title="Financement" icon="🏦">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputField
+            label="Apport"
+            field="apport"
+            value={inputs.apport}
+            onChange={onChange}
+            suffix="€"
+            {...tip}
+          />
+          <AutoField
+            label="→ Capital emprunté"
+            value={formatCurrency(results.montantEmprunte)}
+          />
+          {/* Durée : pas de tooltip */}
+          <InputField
+            label="Durée"
+            field="dureeEmprunt"
+            value={inputs.dureeEmprunt}
+            onChange={onChange}
+            suffix="ans"
+          />
+          <InputField
+            label="Taux d'intérêt"
+            field="tauxInteret"
+            value={inputs.tauxInteret}
+            onChange={onChange}
+            suffix="%"
+            {...tip}
+          />
+          <InputField
+            label="Assurance emprunteur"
+            field="tauxAssurance"
+            value={inputs.tauxAssurance}
+            onChange={onChange}
+            suffix="%/an"
+            {...tip}
+          />
+          <AutoField
+            label="→ Mensualité totale"
+            value={`${formatCurrency(results.mensualiteTotale)}/mois`}
+          />
+        </div>
+      </Section>
+    </div>
+  );
+}
