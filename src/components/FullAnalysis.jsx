@@ -5,15 +5,54 @@ import { MetricsCards } from './MetricsCards';
 import { SynthesisTable } from './SynthesisTable';
 import { NegotiationSimulator } from './NegotiationSimulator';
 import { Checklist } from './Checklist';
-import { MissingDataChecklist } from './MissingDataChecklist';
 import { InputForm } from './InputForm';
 import { ExportButtons } from './ExportButtons';
 import { SaveModal } from './SaveModal';
+import { AgencyCall } from './AgencyCall';
 import { v4 as uuidv4 } from 'uuid';
 import { usePersistInputs } from '../hooks/usePersist';
 import { DEFAULTS } from '../constants';
 
-export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults }) {
+const defaultQualite = {
+  dpe: null,
+  surface: null,
+  anneeConstruction: null,
+  etatGeneral: null,
+  etage: null,
+  ascenseur: null,
+  exposition: null,
+  locataireEnPlace: null,
+  loyerActuel: null,
+};
+
+const getWarnings = (qualite) => {
+  const list = [];
+  if (!qualite) return list;
+
+  const { dpe, etatGeneral } = qualite;
+  const isPassoire = dpe === 'E' || dpe === 'F' || dpe === 'G';
+  const isTravaux = etatGeneral === 'travaux';
+
+  if (isTravaux && isPassoire) {
+    list.push("🔴 Double risque : travaux lourds + passoire énergétique. Ce bien sort du profil cible.");
+  } else {
+    if (dpe === 'D') {
+      list.push("⚠️ DPE D — limite acceptable. Surveiller l'évolution de la réglementation.");
+    } else if (dpe === 'E') {
+      list.push("🔴 DPE E — interdiction de location probable d'ici 2034. Risque réglementaire élevé.");
+    } else if (dpe === 'F' || dpe === 'G') {
+      list.push("🔴 DPE F/G — location interdite ou sur le point de l'être. À exclure sauf rénovation thermique complète.");
+    }
+
+    if (isTravaux) {
+      list.push("⚠️ Travaux importants signalés — revoir le budget mobilier et la provision travaux dans le calculateur.");
+    }
+  }
+
+  return list;
+};
+
+export function FullAnalysis({ prefill, biens = [], onSave, onReset, effectiveDefaults }) {
   const defaults = effectiveDefaults ?? DEFAULTS;
   const [inputs, updateField, resetInputs, mergeInputs] = usePersistInputs(
     'rentaloc_analysis',
@@ -23,12 +62,23 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
   const [note, setNote] = useState('');
   const [metricsOpen, setMetricsOpen] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showAgencyCall, setShowAgencyCall] = useState(false);
+  
   const [unset, setUnset] = useState(() => {
     try {
       const raw = localStorage.getItem('rentaloc_analysis_unset');
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
+    }
+  });
+
+  const [qualite, setQualite] = useState(() => {
+    try {
+      const raw = localStorage.getItem('rentaloc_analysis_qualite');
+      return raw ? { ...defaultQualite, ...JSON.parse(raw) } : { ...defaultQualite };
+    } catch {
+      return { ...defaultQualite };
     }
   });
 
@@ -51,6 +101,11 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
       } else {
         setUnset([]);
       }
+      setNote(bienMeta?.note || '');
+      
+      const activeQualite = bienMeta?.qualite || defaultQualite;
+      setQualite(activeQualite);
+      localStorage.setItem('rentaloc_analysis_qualite', JSON.stringify(activeQualite));
     }
   }, [prefill, defaults, mergeInputs, bienMeta]);
 
@@ -99,6 +154,54 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
     setUnset((prev) => prev.includes(field) ? prev.filter((f) => f !== field) : [...prev, field]);
   };
 
+  const updateQualite = (newQualite) => {
+    setQualite(newQualite);
+    localStorage.setItem('rentaloc_analysis_qualite', JSON.stringify(newQualite));
+    
+    if (bienMeta?.id) {
+      const mergedInputs = { ...inputs };
+      const r = compute(safeInputs);
+      const verdict = getVerdict(getLights(r));
+      onSave({
+        id: bienMeta.id,
+        nom: inputs.nom,
+        ville: inputs.ville,
+        url: bienMeta.url || '',
+        type: bienMeta.type || 'appartement',
+        status: bienMeta.status || 'a_analyser',
+        note: note,
+        createdAt: bienMeta.createdAt || Date.now(),
+        verdict,
+        unset,
+        inputs: mergedInputs,
+        qualite: newQualite,
+      });
+    }
+  };
+
+  // Auto-save during Agency Call mode
+  useEffect(() => {
+    if (showAgencyCall && bienMeta?.id) {
+      const mergedInputs = { ...inputs };
+      const r = compute(safeInputs);
+      const verdict = getVerdict(getLights(r));
+      onSave({
+        id: bienMeta.id,
+        nom: inputs.nom,
+        ville: inputs.ville,
+        url: bienMeta.url || '',
+        type: bienMeta.type || 'appartement',
+        status: bienMeta.status || 'a_analyser',
+        note: note,
+        createdAt: bienMeta.createdAt || Date.now(),
+        verdict,
+        unset,
+        inputs: mergedInputs,
+        qualite,
+      });
+    }
+  }, [inputs, unset, note, qualite, showAgencyCall, bienMeta, safeInputs, onSave]);
+
   const handleSave = ({ nom, ville, url, type, note: n }) => {
     if (isMissingReq) return;
     const mergedInputs = { ...inputs, nom: nom || inputs.nom, ville: ville || inputs.ville };
@@ -116,6 +219,7 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
       verdict,
       unset,
       inputs: mergedInputs,
+      qualite,
     });
     if (nom) updateField('nom', nom);
     if (ville) updateField('ville', ville);
@@ -125,15 +229,98 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
     resetInputs({ ...defaults });
     setUnset([]);
     setNote('');
+    setQualite(defaultQualite);
+    localStorage.removeItem('rentaloc_analysis_qualite');
     setShowResetConfirm(false);
+    if (onReset) onReset();
   };
 
-  const [mobileTab, setMobileTab] = useState('resultats'); // 'resultats', 'saisie', 'nego', 'checklist'
+  const [mobileTab, setMobileTab] = useState('resultats'); // 'resultats', 'saisie', 'nego', 'fiche', 'checklist'
   const rightTab = mobileTab === 'saisie' ? 'resultats' : mobileTab;
 
+  const warnings = getWarnings(qualite);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 pt-14 pb-[80px] md:pb-8">
-      <div className="md:flex md:gap-8 mt-4 md:mt-8 items-start">
+    <div className="max-w-7xl mx-auto px-4 pt-20 pb-[80px] md:pb-8">
+      
+      {/* Desktop Full-Width Title Block */}
+      <div className="hidden md:flex items-center justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-5 mb-6 no-print">
+        <div className="flex items-center gap-4">
+          {/* Dynamic Verdict Badge */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ${
+            getVerdict(getLights(results)) === 'GO'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+              : getVerdict(getLights(results)) === 'ATTENTION'
+              ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              getVerdict(getLights(results)) === 'GO'
+                ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                : getVerdict(getLights(results)) === 'ATTENTION'
+                ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                : 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'
+            }`} />
+            <span>{getVerdict(getLights(results))}</span>
+          </div>
+
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
+              {inputs.nom || 'Analyse en cours...'}
+            </h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium mt-1">
+              {inputs.ville ? `📍 ${inputs.ville}` : 'Saisissez les informations dans le formulaire'}
+            </p>
+          </div>
+        </div>
+
+        {/* Action buttons row */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAgencyCall(true)}
+            title="Appel agence"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+          >
+            <span>📞</span>
+            <span>Appel agence</span>
+          </button>
+          <ExportButtons inputs={inputs} results={results} note={note} />
+          <button
+            onClick={() => setShowSaveModal(true)}
+            disabled={isMissingReq}
+            title="Sauvegarder"
+            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span>💾</span>
+            <span>Sauvegarder</span>
+          </button>
+          <button
+            onClick={() => setShowResetConfirm(true)}
+            title="Réinitialiser l'analyse"
+            className="flex items-center justify-center w-9 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors text-sm"
+          >
+            ↺
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Warnings Block */}
+      {warnings.length > 0 && (
+        <div className="hidden md:block bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 mb-6">
+          <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 mb-2.5">
+            <span>⚠️</span> Points de vigilance
+          </h3>
+          <ul className="space-y-2">
+            {warnings.map((w, idx) => (
+              <li key={idx} className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="md:flex md:gap-8 mt-4 md:mt-0 items-start">
         
         {/* COLONNE GAUCHE (Saisie) */}
         <div className={`w-full md:w-[45%] space-y-4 ${mobileTab === 'saisie' ? 'block' : 'hidden md:block'}`}>
@@ -159,7 +346,7 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
 
         {/* COLONNE DROITE (Résultats & Outils) */}
         <div className="w-full md:w-[55%] md:sticky md:top-20 space-y-4">
-            
+
           {/* Sub-navbar on Desktop */}
           <div className="hidden md:flex items-center justify-between bg-zinc-100/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 mb-6">
             <div className="flex gap-1 w-full">
@@ -186,6 +373,17 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
                 <span>Simulateur Négo</span>
               </button>
               <button
+                onClick={() => setMobileTab('fiche')}
+                className={`flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold rounded-lg transition-all flex-1 ${
+                  rightTab === 'fiche'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/10 dark:border-zinc-700/30'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200'
+                }`}
+              >
+                <span>📑</span>
+                <span>Fiche du bien</span>
+              </button>
+              <button
                 onClick={() => setMobileTab('checklist')}
                 className={`flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold rounded-lg transition-all flex-1 ${
                   rightTab === 'checklist'
@@ -193,32 +391,55 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
                     : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200'
                 }`}
               >
-                <span>📋</span>
-                <span>Checklist due diligence</span>
+                <span>✅</span>
+                <span>Due diligence</span>
               </button>
             </div>
           </div>
             
           {/* VUE RESULTATS */}
           <div className={`space-y-4 ${rightTab === 'resultats' ? 'block' : 'hidden'}`}>
-            <VerdictBanner results={results} nom={inputs.nom} ville={inputs.ville} unsetCount={estimatedUnsetCount}>
-              <ExportButtons inputs={inputs} results={results} note={note} />
-              <button
-                onClick={() => setShowSaveModal(true)}
-                disabled={isMissingReq}
-                title="Sauvegarder"
-                className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors no-print text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                💾
-              </button>
-              <button
-                onClick={() => setShowResetConfirm(true)}
-                title="Réinitialiser l'analyse"
-                className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors no-print text-sm"
-              >
-                ↺
-              </button>
-            </VerdictBanner>
+            <div className="md:hidden">
+              <VerdictBanner results={results} nom={inputs.nom} ville={inputs.ville} unsetCount={estimatedUnsetCount}>
+                <button
+                  onClick={() => setShowAgencyCall(true)}
+                  title="Appel agence"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors no-print text-sm"
+                >
+                  📞
+                </button>
+                <ExportButtons inputs={inputs} results={results} note={note} />
+                <button
+                  onClick={() => setShowSaveModal(true)}
+                  disabled={isMissingReq}
+                  title="Sauvegarder"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors no-print text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  💾
+                </button>
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  title="Réinitialiser l'analyse"
+                  className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors no-print text-sm"
+                >
+                  ↺
+                </button>
+              </VerdictBanner>
+              {warnings.length > 0 && (
+                <div className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3.5 mt-3 no-print">
+                  <h3 className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 mb-2">
+                     <span>⚠️</span> Points de vigilance
+                  </h3>
+                  <ul className="space-y-1.5">
+                    {warnings.map((w, idx) => (
+                      <li key={idx} className="text-[11px] text-zinc-700 dark:text-zinc-300 font-medium">
+                        {w}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
 
             <MetricsCards results={results} />
             <SynthesisTable results={results} unset={unset} />
@@ -226,36 +447,39 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
 
           {/* VUE NEGO */}
           <div className={`no-print space-y-4 ${rightTab === 'nego' ? 'block' : 'hidden'}`}>
-            <NegotiationSimulator inputs={inputs} />
+            <NegotiationSimulator inputs={safeInputs} />
+          </div>
+
+          {/* VUE FICHE DU BIEN */}
+          <div className={`no-print space-y-4 ${rightTab === 'fiche' ? 'block' : 'hidden'}`}>
+            <Checklist 
+              bien={{
+                id: bienMeta?.id || 'draft',
+                status: bienMeta?.status || 'a_analyser',
+                type: bienMeta?.type || 'appartement'
+              }}
+              inputs={inputs}
+              unset={unset}
+              qualite={qualite}
+              onOpenAgencyCall={() => setShowAgencyCall(true)}
+              tab="fiche"
+            />
           </div>
 
           {/* VUE CHECKLIST */}
           <div className={`no-print space-y-4 ${rightTab === 'checklist' ? 'block' : 'hidden'}`}>
-            <MissingDataChecklist 
-              unset={unset} 
-              onCheck={(field) => {
-                toggleUnset(field);
-                if (window.innerWidth < 768) setMobileTab('saisie');
-              }} 
+            <Checklist 
+              bien={{
+                id: bienMeta?.id || 'draft',
+                status: bienMeta?.status || 'a_analyser',
+                type: bienMeta?.type || 'appartement'
+              }}
+              inputs={inputs}
+              unset={unset}
+              qualite={qualite}
+              onOpenAgencyCall={() => setShowAgencyCall(true)}
+              tab="checklist"
             />
-            {bienMeta?.id ? (
-              <div className="card">
-                <div className="flex items-center gap-2 mb-5">
-                  <span className="text-base">📋</span>
-                  <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Checklist due diligence</h2>
-                </div>
-                <div className="space-y-4">
-                  <Checklist bien={{ id: bienMeta.id, status: bienMeta.status ?? 'a_analyser', type: bienMeta.type ?? 'appartement' }} />
-                </div>
-              </div>
-            ) : (
-              <div className="card text-center py-6">
-                <span className="text-2xl block mb-2">📌</span>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Sauvegardez ce bien pour débloquer la checklist de due diligence complète.
-                </p>
-              </div>
-            )}
           </div>
             
         </div>
@@ -288,12 +512,20 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
           <span className="text-[10px] font-medium">Négo</span>
         </button>
         <button 
+          onClick={() => setMobileTab('fiche')} 
+          className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${mobileTab === 'fiche' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`}
+        >
+          {mobileTab === 'fiche' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-zinc-900 dark:bg-zinc-100 rounded-b-full"></div>}
+          <span className="text-xl mb-0.5">📑</span>
+          <span className="text-[10px] font-medium">Fiche</span>
+        </button>
+        <button 
           onClick={() => setMobileTab('checklist')} 
           className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${mobileTab === 'checklist' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`}
         >
           {mobileTab === 'checklist' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-zinc-900 dark:bg-zinc-100 rounded-b-full"></div>}
-          <span className="text-xl mb-0.5">📋</span>
-          <span className="text-[10px] font-medium">Checklist</span>
+          <span className="text-xl mb-0.5">✅</span>
+          <span className="text-[10px] font-medium">Due dil.</span>
         </button>
       </div>
 
@@ -331,6 +563,22 @@ export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults })
           initialUrl={bienMeta?.url || ''}
           initialType={bienMeta?.type || 'appartement'}
           initialNote={bienMeta?.note || ''}
+        />
+      )}
+
+      {showAgencyCall && (
+        <AgencyCall
+          inputs={inputs}
+          updateField={updateField}
+          unset={unset}
+          setUnset={setUnset}
+          qualite={qualite}
+          updateQualite={updateQualite}
+          note={note}
+          setNote={setNote}
+          onClose={() => setShowAgencyCall(false)}
+          type={type}
+          nomBien={inputs.nom || bienMeta?.nom || ''}
         />
       )}
     </div>

@@ -87,10 +87,9 @@ function SliderField({ label, value, min, max, step, onChange, format, suffix })
 }
 
 // ── Main QuickView ─────────────────────────────────────────────────────────────
-export function QuickView({ onSwitchToAnalysis, onSave }) {
+export function QuickView({ onSwitchToAnalysis }) {
   const [prixFAI, setPrixFAI] = useState(87000);
   const [loyerMensuel, setLoyerMensuel] = useState(530);
-  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const loyerAnnuelBrut = loyerMensuel * 12;
   const rendementBrut = prixFAI > 0 ? (loyerAnnuelBrut / prixFAI) * 100 : null;
@@ -108,42 +107,6 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
 
   const handleSwitchToAnalysis = () => {
     onSwitchToAnalysis({ prixFAI, loyerMensuel });
-  };
-
-  const handleSave = ({ nom, ville, url, type, note }) => {
-    const inputs = { nom, ville, prixFAI, loyerMensuel };
-    const results = compute({
-      ...inputs,
-      tauxNotaire: 8,
-      budgetMobilier: 3000,
-      vacanceMois: 1,
-      chargesCopro: 600,
-      taxeFonciere: 900,
-      cfe: 250,
-      assurancePNO: 150,
-      fraisGestion: 7,
-      provisionTravaux: 300,
-      fraisComptable: 400,
-      apport: 15000,
-      dureeEmprunt: 20,
-      tauxInteret: 3.5,
-      tauxAssurance: 0.3,
-    });
-    const lights = getLights(results);
-    const verdict = getVerdict(lights);
-
-    onSave({
-      id: uuidv4(),
-      nom,
-      ville,
-      url,
-      type: type || 'appartement',
-      status: 'a_analyser',
-      note,
-      createdAt: Date.now(),
-      verdict,
-      inputs: { ...inputs },
-    });
   };
 
   return (
@@ -234,13 +197,6 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
           >
             Analyser en détail →
           </button>
-          <button
-            onClick={() => setShowSaveModal(true)}
-            disabled={!hasValues}
-            className="w-full py-3 text-sm font-medium border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Sauvegarder ce bien
-          </button>
         </div>
 
         {/* Seuils legend */}
@@ -259,15 +215,6 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
           </span>
         </div>
       </div>
-
-      {showSaveModal && (
-        <SaveModal
-          onSave={handleSave}
-          onClose={() => setShowSaveModal(false)}
-          initialNom={inputs.nom || ''}
-          initialVille={inputs.ville || ''}
-        />
-      )}
     </div>
   );
 }

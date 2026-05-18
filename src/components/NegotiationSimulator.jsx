@@ -21,16 +21,22 @@ const verdictStyle = { GO: 'text-green-600 dark:text-green-400', ATTENTION: 'tex
 
 // ── Dichotomie GO price ────────────────────────────────────────────────────────
 function findGOPrice(inputs) {
-  // Check if even at price=0 all lights are green — if not, it's impossible
-  const testZero = compute({ ...inputs, prixFAI: 0 });
-  const zeroLights = [lightRend(testZero.rendementBrut), lightCash(testZero.cashflowMensuel), lightBudg(testZero.budgetTotal)];
-  if (!zeroLights.every((l) => l === 'green')) return null;
+  // We want to find the MAXIMUM prixFAI where all 3 lights are green.
+  // Binary search between 1 and current price (or 2x current).
+  const maxSearch = Math.max(inputs.prixFAI * 2, 200000);
+  
+  // First check: at a very low price (e.g. 1€), are all lights green?
+  const testLow = compute({ ...inputs, prixFAI: 1 });
+  const lowLights = [lightRend(testLow.rendementBrut), lightCash(testLow.cashflowMensuel), lightBudg(testLow.budgetTotal)];
+  if (!lowLights.every((l) => l === 'green')) return null; // impossible even at 1€
 
-  let low = 0;
-  let high = inputs.prixFAI * 2; // search up to 2x current price
-  let result = null;
-  for (let i = 0; i < 50; i++) {
-    const mid = (low + high) / 2;
+  let low = 1;
+  let high = maxSearch;
+  let result = 1;
+  
+  for (let i = 0; i < 60; i++) {
+    const mid = Math.round((low + high) / 2);
+    if (mid <= low) break;
     const r = compute({ ...inputs, prixFAI: mid });
     const lights = [lightRend(r.rendementBrut), lightCash(r.cashflowMensuel), lightBudg(r.budgetTotal)];
     if (lights.every((l) => l === 'green')) {
@@ -40,24 +46,7 @@ function findGOPrice(inputs) {
       high = mid;
     }
   }
-  // Return the max price where GO is achieved
-  // Actually we want max price → need to flip: go up until fail
-  // Redo: find the maximum prixFAI where all green
-  low = 0;
-  high = inputs.prixFAI * 2;
-  result = null;
-  for (let i = 0; i < 50; i++) {
-    const mid = (low + high) / 2;
-    const r = compute({ ...inputs, prixFAI: mid });
-    const lights = [lightRend(r.rendementBrut), lightCash(r.cashflowMensuel), lightBudg(r.budgetTotal)];
-    if (lights.every((l) => l === 'green')) {
-      result = mid;
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-  return result; // null if impossible
+  return result;
 }
 
 // ── Row display ────────────────────────────────────────────────────────────────

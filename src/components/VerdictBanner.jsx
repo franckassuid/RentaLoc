@@ -47,7 +47,7 @@ export function VerdictBanner({ results, nom, ville, children, unsetCount = 0 })
 
         {/* Right: action buttons */}
         {children && (
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0 md:hidden">
             {children}
           </div>
         )}

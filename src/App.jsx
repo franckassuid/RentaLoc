@@ -27,7 +27,13 @@ export default function App() {
   };
 
   const handleSwitchToAnalysis = (values) => {
-    setPrefill(values);
+    setPrefill({
+      prixFAI: values.prixFAI,
+      loyerMensuel: values.loyerMensuel,
+      nom: '',
+      ville: '',
+      _bien: null
+    });
     setMode('analysis');
   };
 
@@ -48,7 +54,9 @@ export default function App() {
         mode={mode}
         onModeChange={handleModeChange}
         savedCount={biens.length}
+        biens={biens}
         onOpenSaved={() => setShowSaved(true)}
+        onOpenBien={handleOpenSaved}
         onOpenProfile={handleOpenProfile}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -69,6 +77,7 @@ export default function App() {
             biens={biens}
             effectiveDefaults={effectiveDefaults}
             onSave={saveBien}
+            onReset={() => setPrefill(null)}
           />
         )}
 
