@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icons/*.png'],
+      includeAssets: ['favicon.ico', 'favicon.png', 'logo-clair.png', 'logo-sombre.png', 'icons/*.png'],
       manifest: {
         name: "Rentaloc'",
         short_name: "Rentaloc'",

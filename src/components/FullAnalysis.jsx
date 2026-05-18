@@ -15,7 +15,7 @@ import { DEFAULTS } from '../constants';
 
 export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
   const defaults = effectiveDefaults ?? DEFAULTS;
-  const [inputs, updateField, resetInputs] = usePersistInputs(
+  const [inputs, updateField, resetInputs, mergeInputs] = usePersistInputs(
     'rentaloc_analysis',
     defaults
   );
@@ -44,14 +44,14 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
       const { _bien: _, ...cleanInputs } = prefill || {};
       const provTouched = cleanInputs._provModif !== undefined ? cleanInputs._provModif : false;
       const initProv = provTouched ? cleanInputs.provisionTravaux : Math.round((cleanInputs.prixFAI || defaults.prixFAI) * 0.01);
-      resetInputs({ ...defaults, ...cleanInputs, provisionTravaux: initProv, _provModif: provTouched });
+      mergeInputs({ ...cleanInputs, provisionTravaux: initProv, _provModif: provTouched });
       if (bienMeta?.unset) {
         setUnset(bienMeta.unset);
       } else {
         setUnset([]);
       }
     }
-  }, [prefill, defaults, resetInputs, bienMeta]);
+  }, [prefill, defaults, mergeInputs, bienMeta]);
 
   // Auto-calculate provisionTravaux if it hasn't been modified by user
   useEffect(() => {
@@ -69,6 +69,8 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
   }, [unset]);
 
   const type = bienMeta?.type || 'appartement';
+
+  const estimatedUnsetCount = unset.filter(field => field !== 'fraisGestion' && field !== 'fraisComptable').length;
 
   // Substitution for unset fields
   const subInputs = { ...inputs };
@@ -126,7 +128,7 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
   };
 
   const [mobileTab, setMobileTab] = useState('resultats'); // 'resultats', 'saisie', 'nego', 'checklist'
-  const [checklistOpen, setChecklistOpen] = useState(false);
+  const rightTab = mobileTab === 'saisie' ? 'resultats' : mobileTab;
 
   return (
     <div className="max-w-7xl mx-auto px-4 pt-14 pb-[80px] md:pb-8">
@@ -155,11 +157,50 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
         </div>
 
         {/* COLONNE DROITE (Résultats & Outils) */}
-        <div className={`w-full md:w-[55%] md:sticky md:top-20 space-y-4`}>
+        <div className="w-full md:w-[55%] md:sticky md:top-20 space-y-4">
+            
+          {/* Sub-navbar on Desktop */}
+          <div className="hidden md:flex items-center justify-between bg-zinc-100/80 dark:bg-zinc-900/80 backdrop-blur-md p-1 rounded-xl border border-zinc-200/50 dark:border-zinc-800/50 mb-6">
+            <div className="flex gap-1 w-full">
+              <button
+                onClick={() => setMobileTab('resultats')}
+                className={`flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold rounded-lg transition-all flex-1 ${
+                  rightTab === 'resultats'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/10 dark:border-zinc-700/30'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200'
+                }`}
+              >
+                <span>📊</span>
+                <span>Calculateur & Résultats</span>
+              </button>
+              <button
+                onClick={() => setMobileTab('nego')}
+                className={`flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold rounded-lg transition-all flex-1 ${
+                  rightTab === 'nego'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/10 dark:border-zinc-700/30'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200'
+                }`}
+              >
+                <span>💰</span>
+                <span>Simulateur Négo</span>
+              </button>
+              <button
+                onClick={() => setMobileTab('checklist')}
+                className={`flex items-center justify-center gap-2 py-2 px-4 text-xs font-semibold rounded-lg transition-all flex-1 ${
+                  rightTab === 'checklist'
+                    ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm border border-zinc-200/10 dark:border-zinc-700/30'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-200'
+                }`}
+              >
+                <span>📋</span>
+                <span>Checklist due diligence</span>
+              </button>
+            </div>
+          </div>
             
           {/* VUE RESULTATS */}
-          <div className={`space-y-4 ${mobileTab === 'resultats' ? 'block' : 'hidden md:block'}`}>
-            <VerdictBanner results={results} nom={inputs.nom} ville={inputs.ville} unsetCount={unset.length}>
+          <div className={`space-y-4 ${rightTab === 'resultats' ? 'block' : 'hidden'}`}>
+            <VerdictBanner results={results} nom={inputs.nom} ville={inputs.ville} unsetCount={estimatedUnsetCount}>
               <ExportButtons inputs={inputs} results={results} note={note} />
               <button
                 onClick={() => setShowSaveModal(true)}
@@ -183,12 +224,12 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
           </div>
 
           {/* VUE NEGO */}
-          <div className={`no-print space-y-4 ${mobileTab === 'nego' ? 'block' : 'hidden md:block'}`}>
+          <div className={`no-print space-y-4 ${rightTab === 'nego' ? 'block' : 'hidden'}`}>
             <NegotiationSimulator inputs={inputs} />
           </div>
 
           {/* VUE CHECKLIST */}
-          <div className={`no-print space-y-4 ${mobileTab === 'checklist' ? 'block' : 'hidden md:block'}`}>
+          <div className={`no-print space-y-4 ${rightTab === 'checklist' ? 'block' : 'hidden'}`}>
             <MissingDataChecklist 
               unset={unset} 
               onCheck={(field) => {
@@ -198,18 +239,13 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
             />
             {bienMeta?.id ? (
               <div className="card">
-                <button type="button" onClick={() => setChecklistOpen((v) => !v)} className="w-full flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base">📋</span>
-                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Checklist due diligence</span>
-                  </div>
-                  <span className="text-zinc-400 text-sm transition-transform duration-200" style={{ transform: checklistOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
-                </button>
-                {checklistOpen && (
-                  <div className="mt-4 border-t border-zinc-100 dark:border-zinc-800 pt-4">
-                    <Checklist bien={{ id: bienMeta.id, status: bienMeta.status ?? 'a_analyser', type: bienMeta.type ?? 'appartement' }} />
-                  </div>
-                )}
+                <div className="flex items-center gap-2 mb-5">
+                  <span className="text-base">📋</span>
+                  <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Checklist due diligence</h2>
+                </div>
+                <div className="space-y-4">
+                  <Checklist bien={{ id: bienMeta.id, status: bienMeta.status ?? 'a_analyser', type: bienMeta.type ?? 'appartement' }} />
+                </div>
               </div>
             ) : (
               <div className="card text-center py-6">

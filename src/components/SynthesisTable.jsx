@@ -4,6 +4,15 @@ import { formatCurrency } from '../compute';
 export function SynthesisTable({ results, unset = [] }) {
   const [showChargeDetail, setShowChargeDetail] = useState(false);
 
+  const formattedCashflow = (val) => {
+    const formatted = formatCurrency(Math.abs(val));
+    if (val > 0) return `+${formatted}/mois`;
+    if (val < 0) return `-${formatted}/mois`;
+    return `${formatted}/mois`;
+  };
+
+  const estimatedUnsetCount = unset.filter(field => field !== 'fraisGestion' && field !== 'fraisComptable').length;
+
   const rows = [
     {
       label: 'Loyer annuel brut',
@@ -49,8 +58,13 @@ export function SynthesisTable({ results, unset = [] }) {
     },
     {
       label: 'Effort mensuel final',
-      value: `${formatCurrency(results.mensualiteTotale)}/mois`,
+      value: formattedCashflow(results.cashflowMensuel),
       style: 'bold',
+      colorClass: results.cashflowMensuel > 0
+        ? 'text-green-600 dark:text-green-400'
+        : results.cashflowMensuel >= -100
+        ? 'text-yellow-600 dark:text-yellow-400'
+        : 'text-red-600 dark:text-red-400',
     },
   ];
 
@@ -91,16 +105,18 @@ export function SynthesisTable({ results, unset = [] }) {
                 )}
               </span>
               <span
-                className={`font-mono text-sm ${
-                  row.style === 'secondary'
+                className={`font-mono ${
+                  row.colorClass
+                    ? `${row.colorClass} font-bold text-base`
+                    : row.style === 'secondary'
                     ? 'text-zinc-400 dark:text-zinc-600 text-xs'
                     : row.style === 'bold'
                     ? 'font-bold text-zinc-900 dark:text-zinc-100 text-base'
-                    : 'text-zinc-800 dark:text-zinc-200'
+                    : 'text-zinc-800 dark:text-zinc-200 text-sm'
                 }`}
               >
                 {row.value}
-                {row.label === 'Total charges annuelles' && unset.length > 0 && (
+                {row.label === 'Total charges annuelles' && estimatedUnsetCount > 0 && (
                   <span className="ml-2 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 align-middle">
                     ~ Estimé
                   </span>

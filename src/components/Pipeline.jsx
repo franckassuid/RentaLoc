@@ -162,7 +162,6 @@ export function Pipeline({ biens, onUpdateBien, onDeleteBien, onOpenBien }) {
 
 // ── Single pipeline card ───────────────────────────────────────────────────
 function PipelineCard({ bien, isDragging, onDragStart, onDragEnd, onOpen, onDelete, columns, onMoveToColumn }) {
-  const [showMove, setShowMove] = useState(false);
   const rendBrut = bien.inputs?.prixFAI > 0
     ? ((bien.inputs.loyerMensuel * 12) / bien.inputs.prixFAI) * 100
     : null;
@@ -229,7 +228,7 @@ function PipelineCard({ bien, isDragging, onDragStart, onDragEnd, onOpen, onDele
       </div>
 
       {/* Missing data checklist */}
-      {bien.unset && bien.unset.length > 0 && (
+      {bien.unset && bien.unset.filter(field => field !== 'fraisGestion' && field !== 'fraisComptable').length > 0 && (
         <div onClick={onOpen} className="cursor-pointer">
           <MissingDataChecklist unset={bien.unset} onCheck={onOpen} />
         </div>
@@ -237,30 +236,25 @@ function PipelineCard({ bien, isDragging, onDragStart, onDragEnd, onOpen, onDele
 
       {/* Actions row */}
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-700">
-        {/* Move to column */}
-        <div className="relative">
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowMove(!showMove); }}
-            className="text-[10px] text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors px-1"
+        {/* Move to column using native select for mobile robustability */}
+        <div className="relative flex items-center bg-zinc-50 dark:bg-zinc-800/50 rounded hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors">
+          <span className="text-[10px] text-zinc-400 pointer-events-none absolute left-1.5">↕</span>
+          <select
+            value={bien.status ?? 'a_analyser'}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => {
+              e.stopPropagation();
+              onMoveToColumn(e.target.value);
+            }}
+            className="pl-5 pr-2 py-1 text-[10px] font-medium text-zinc-600 dark:text-zinc-300 bg-transparent cursor-pointer appearance-none outline-none w-28"
             title="Déplacer vers…"
           >
-            ↕ Déplacer
-          </button>
-          {showMove && (
-            <div className="absolute bottom-6 left-0 z-10 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg py-1 min-w-max">
-              {columns.map((col) => (
-                bien.status !== col.id && (
-                  <button
-                    key={col.id}
-                    onClick={(e) => { e.stopPropagation(); onMoveToColumn(col.id); setShowMove(false); }}
-                    className="block w-full text-left px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
-                  >
-                    {col.icon} {col.label}
-                  </button>
-                )
-              ))}
-            </div>
-          )}
+            {columns.map((col) => (
+              <option key={col.id} value={col.id}>
+                {col.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <button

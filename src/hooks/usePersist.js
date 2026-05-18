@@ -76,5 +76,13 @@ export function usePersistInputs(key, defaults) {
     localStorage.setItem(key, JSON.stringify(merged));
   };
 
-  return [inputs, updateField, resetInputs];
+  const mergeInputs = (newValues) => {
+    setInputs((prev) => {
+      const merged = { ...prev, ...newValues };
+      localStorage.setItem(key, JSON.stringify(merged));
+      return merged;
+    });
+  };
+
+  return [inputs, updateField, resetInputs, mergeInputs];
 }

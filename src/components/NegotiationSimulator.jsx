@@ -75,7 +75,6 @@ function MetricRow({ label, value, light }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export function NegotiationSimulator({ inputs }) {
-  const [open, setOpen] = useState(false);
   const [negoPct, setNegoPct] = useState(0);
 
   const negoPrice = useMemo(() => {
@@ -92,7 +91,7 @@ export function NegotiationSimulator({ inputs }) {
 
   const baseVerdict = getVerdict(getLights(compute(inputs)));
 
-  const goPrice = useMemo(() => open ? findGOPrice(inputs) : null, [inputs, open]);
+  const goPrice = useMemo(() => findGOPrice(inputs), [inputs]);
 
   const goPriceDiff = goPrice !== null && goPrice !== undefined
     ? inputs.prixFAI - goPrice
@@ -104,17 +103,13 @@ export function NegotiationSimulator({ inputs }) {
   return (
     <div className="card">
       {/* Header */}
-      <button type="button" onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-base">💰</span>
-          <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Simulateur de négociation</span>
-        </div>
-        <span className="text-zinc-400 text-sm transition-transform duration-200" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
-      </button>
+      <div className="flex items-center gap-2 mb-5">
+        <span className="text-base">💰</span>
+        <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Simulateur de négociation</h2>
+      </div>
 
-      {open && (
-        <div className="mt-4 space-y-4">
-          {/* Slider */}
+      <div className="space-y-5">
+        {/* Slider */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm text-zinc-600 dark:text-zinc-400">Négociation</label>
@@ -197,8 +192,7 @@ export function NegotiationSimulator({ inputs }) {
               </>
             )}
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

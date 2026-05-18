@@ -30,6 +30,7 @@ export function compute(b) {
     r > 0
       ? (montantEmprunte * r) / (1 - Math.pow(1 + r, -n))
       : montantEmprunte / n;
+      
   const assuranceMensuelle = (montantEmprunte * (b.tauxAssurance / 100)) / 12;
   const mensualiteTotale = mensualiteCredit + assuranceMensuelle;
 

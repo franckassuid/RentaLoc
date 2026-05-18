@@ -20,9 +20,11 @@ export function Header({
         <div className="flex items-center flex-shrink-0">
           <button
             onClick={() => onModeChange('quickview')}
-            className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 hover:opacity-80 transition-opacity"
           >
-            Rentaloc<span className="text-zinc-500 dark:text-zinc-400">'</span>
+            <img src="/logo-clair.png" alt="Rentaloc'" className="w-6 h-6 rounded-md dark:hidden" />
+            <img src="/logo-sombre.png" alt="Rentaloc'" className="w-6 h-6 rounded-md hidden dark:block" />
+            <span>Rentaloc<span className="text-zinc-500 dark:text-zinc-400">'</span></span>
           </button>
         </div>
 

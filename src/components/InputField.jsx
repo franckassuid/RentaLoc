@@ -117,6 +117,7 @@ export function InputField({
           type={type === 'number' ? 'number' : 'text'}
           value={value === '' ? '' : value}
           onChange={handleChange}
+          onWheel={(e) => e.target.blur()}
           disabled={isUnset}
           placeholder={placeholder ?? (type === 'number' ? '0' : '')}
           min={type === 'number' ? 0 : undefined}
