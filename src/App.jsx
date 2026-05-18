@@ -66,6 +66,7 @@ export default function App() {
           <FullAnalysis
             key={JSON.stringify(prefill)}
             prefill={prefill}
+            biens={biens}
             effectiveDefaults={effectiveDefaults}
             onSave={saveBien}
           />

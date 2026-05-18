@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePersistInputs } from '../hooks/usePersist';
 import { DEFAULTS } from '../constants';
 
-export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
+export function FullAnalysis({ prefill, biens = [], onSave, effectiveDefaults }) {
   const defaults = effectiveDefaults ?? DEFAULTS;
   const [inputs, updateField, resetInputs, mergeInputs] = usePersistInputs(
     'rentaloc_analysis',
@@ -34,7 +34,8 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
 
   const appliedPrefill = useRef(false);
   // Extract bien metadata (_bien is attached by App when opening a saved bien)
-  const bienMeta = prefill?._bien ?? null;
+  const initialBienMeta = prefill?._bien ?? null;
+  const bienMeta = initialBienMeta ? (biens.find((b) => b.id === initialBienMeta.id) || initialBienMeta) : null;
 
   // Apply prefill values when coming from QuickView/Pipeline (only once per prefill change)
   useEffect(() => {
@@ -104,14 +105,14 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
     const r = compute({ ...safeInputs, nom: mergedInputs.nom, ville: mergedInputs.ville });
     const verdict = getVerdict(getLights(r));
     onSave({
-      id: uuidv4(),
+      id: bienMeta?.id || uuidv4(),
       nom: nom || inputs.nom,
       ville: ville || inputs.ville,
-      url,
-      type: type || 'appartement',
-      status: 'a_analyser',
-      note: n,
-      createdAt: Date.now(),
+      url: url !== undefined ? url : (bienMeta?.url || ''),
+      type: type || bienMeta?.type || 'appartement',
+      status: bienMeta?.status || 'a_analyser',
+      note: n !== undefined ? n : (bienMeta?.note || ''),
+      createdAt: bienMeta?.createdAt || Date.now(),
       verdict,
       unset,
       inputs: mergedInputs,
@@ -325,8 +326,11 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
         <SaveModal
           onSave={handleSave}
           onClose={() => setShowSaveModal(false)}
-          initialNom={inputs.nom}
-          initialVille={inputs.ville}
+          initialNom={inputs.nom || bienMeta?.nom || ''}
+          initialVille={inputs.ville || bienMeta?.ville || ''}
+          initialUrl={bienMeta?.url || ''}
+          initialType={bienMeta?.type || 'appartement'}
+          initialNote={bienMeta?.note || ''}
         />
       )}
     </div>

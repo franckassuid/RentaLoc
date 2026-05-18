@@ -264,6 +264,8 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
         <SaveModal
           onSave={handleSave}
           onClose={() => setShowSaveModal(false)}
+          initialNom={inputs.nom || ''}
+          initialVille={inputs.ville || ''}
         />
       )}
     </div>

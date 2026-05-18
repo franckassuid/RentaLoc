@@ -1,11 +1,19 @@
 import { useState } from 'react';
 
-export function SaveModal({ onSave, onClose, initialNom = '', initialVille = '' }) {
+export function SaveModal({
+  onSave,
+  onClose,
+  initialNom = '',
+  initialVille = '',
+  initialUrl = '',
+  initialType = 'appartement',
+  initialNote = ''
+}) {
   const [nom, setNom] = useState(initialNom);
   const [ville, setVille] = useState(initialVille);
-  const [url, setUrl] = useState('');
-  const [type, setType] = useState('appartement');
-  const [note, setNote] = useState('');
+  const [url, setUrl] = useState(initialUrl);
+  const [type, setType] = useState(initialType);
+  const [note, setNote] = useState(initialNote);
 
   const handleSave = () => {
     if (!nom.trim()) return;
