@@ -25,6 +25,10 @@ export function InputField({
   className = '',
   openTooltip,
   setOpenTooltip,
+  isRequired = false,
+  isOptional = false,
+  isUnset = false,
+  onToggleUnset,
 }) {
   const tooltip = TOOLTIPS[field];
   const showTip = openTooltip === field;
@@ -37,12 +41,18 @@ export function InputField({
   const handleChange = (e) => {
     const raw = e.target.value;
     if (type === 'number') {
-      const num = parseFloat(raw);
-      onChange(field, isNaN(num) ? 0 : num);
+      if (raw === '') {
+        onChange(field, '');
+      } else {
+        const num = parseFloat(raw);
+        onChange(field, isNaN(num) ? '' : Math.max(0, num));
+      }
     } else {
       onChange(field, raw);
     }
   };
+
+  const showError = isRequired && (value === '' || value === null);
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
@@ -87,10 +97,12 @@ export function InputField({
         )}
         <input
           type={type === 'number' ? 'number' : 'text'}
-          value={value === 0 && type === 'number' ? '' : value}
+          value={value === '' ? '' : value}
           onChange={handleChange}
+          disabled={isUnset}
           placeholder={placeholder ?? (type === 'number' ? '0' : '')}
-          className={`input-base ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
+          min={type === 'number' ? 0 : undefined}
+          className={`input-base ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''} ${showError ? 'border-red-500 focus:ring-red-500' : ''} ${isUnset ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-600 opacity-50 cursor-not-allowed' : ''}`}
           inputMode={type === 'number' ? 'decimal' : 'text'}
         />
         {suffix && (
@@ -99,6 +111,22 @@ export function InputField({
           </span>
         )}
       </div>
+
+      {showError && (
+        <span className="text-xs text-red-500 mt-0.5">Valeur requise</span>
+      )}
+
+      {isOptional && (
+        <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isUnset}
+            onChange={() => onToggleUnset(field)}
+            className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-600 accent-zinc-900 dark:accent-zinc-100 cursor-pointer"
+          />
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">Non renseigné</span>
+        </label>
+      )}
     </div>
   );
 }

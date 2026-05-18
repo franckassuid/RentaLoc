@@ -4,11 +4,12 @@ export function SaveModal({ onSave, onClose, initialNom = '', initialVille = '' 
   const [nom, setNom] = useState(initialNom);
   const [ville, setVille] = useState(initialVille);
   const [url, setUrl] = useState('');
+  const [type, setType] = useState('appartement');
   const [note, setNote] = useState('');
 
   const handleSave = () => {
     if (!nom.trim()) return;
-    onSave({ nom: nom.trim(), ville: ville.trim(), url: url.trim(), note: note.trim() });
+    onSave({ nom: nom.trim(), ville: ville.trim(), url: url.trim(), type, note: note.trim() });
     onClose();
   };
 
@@ -66,6 +67,27 @@ export function SaveModal({ onSave, onClose, initialNom = '', initialVille = '' 
               placeholder="https://leboncoin.fr/..."
               className="input-base"
             />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Type de bien
+            </label>
+            <div className="flex gap-4 pt-1">
+              {[{ value: 'appartement', label: '🏢 Appartement' }, { value: 'maison', label: '🏡 Maison' }].map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="type"
+                    value={opt.value}
+                    checked={type === opt.value}
+                    onChange={() => setType(opt.value)}
+                    className="accent-zinc-900 dark:accent-zinc-100 cursor-pointer"
+                  />
+                  <span className="text-sm text-zinc-700 dark:text-zinc-300">{opt.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">

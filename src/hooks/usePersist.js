@@ -32,7 +32,11 @@ export function useSavedBiens() {
     setBiens((prev) => prev.filter((b) => b.id !== id));
   };
 
-  return { biens, saveBien, deleteBien };
+  const updateBien = (bien) => {
+    setBiens((prev) => prev.map((b) => b.id === bien.id ? bien : b));
+  };
+
+  return { biens, saveBien, deleteBien, updateBien };
 }
 
 export function useActiveMode() {

@@ -5,14 +5,14 @@ import { useProfile } from './hooks/useProfile';
 import { Header } from './components/Header';
 import { QuickView } from './components/QuickView';
 import { FullAnalysis } from './components/FullAnalysis';
-import { Comparator } from './components/Comparator';
+import { Pipeline } from './components/Pipeline';
 import { SavedBiens } from './components/SavedBiens';
 import { ProfileScreen } from './components/ProfileScreen';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
   const [mode, setMode] = useActiveMode();
-  const { biens, saveBien, deleteBien } = useSavedBiens();
+  const { biens, saveBien, deleteBien, updateBien } = useSavedBiens();
   const { effectiveDefaults } = useProfile();
 
   const [showSaved, setShowSaved] = useState(false);
@@ -32,7 +32,13 @@ export default function App() {
   };
 
   const handleOpenSaved = (bien) => {
-    setPrefill(bien.inputs);
+    setPrefill({ ...bien.inputs, _bien: bien });
+    setMode('analysis');
+  };
+
+  // Open bien from Pipeline → full analysis
+  const handleOpenBien = (bien) => {
+    setPrefill({ ...bien.inputs, _bien: bien });
     setMode('analysis');
   };
 
@@ -65,10 +71,12 @@ export default function App() {
           />
         )}
 
-        {mode === 'compare' && (
-          <Comparator
-            effectiveDefaults={effectiveDefaults}
-            onSave={saveBien}
+        {mode === 'pipeline' && (
+          <Pipeline
+            biens={biens}
+            onUpdateBien={updateBien}
+            onDeleteBien={deleteBien}
+            onOpenBien={handleOpenBien}
           />
         )}
 

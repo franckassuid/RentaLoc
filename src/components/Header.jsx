@@ -1,7 +1,7 @@
 const MODES = [
   { id: 'quickview', label: "Coup d'œil", icon: '👁' },
-  { id: 'analysis', label: 'Analyse', icon: '📊' },
-  { id: 'compare', label: 'Comparer', icon: '⚖️' },
+  { id: 'analysis',  label: 'Analyse',    icon: '📊' },
+  { id: 'pipeline',  label: 'Pipeline',   icon: '🗂' },
 ];
 
 export function Header({

@@ -16,16 +16,84 @@ const lightBg = {
   red: 'bg-red-500/10 border-red-500/20',
 };
 
+// ── Slider config ─────────────────────────────────────────────────────────────
+const PRIX_MIN = 20000;
+const PRIX_MAX = 300000;
+const PRIX_STEP = 1000;
+const LOYER_MIN = 200;
+const LOYER_MAX = 3000;
+const LOYER_STEP = 10;
+
+function formatK(val) {
+  return val >= 1000 ? `${(val / 1000).toFixed(0)} k€` : `${val} €`;
+}
+
+// ── Slider component ──────────────────────────────────────────────────────────
+function SliderField({ label, value, min, max, step, onChange, format, suffix }) {
+  const pct = ((value - min) / (max - min)) * 100;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{label}</label>
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            value={value}
+            min={min}
+            max={max}
+            step={step}
+            onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              if (!isNaN(v)) onChange(Math.min(max, Math.max(min, v)));
+            }}
+            className="w-24 text-right text-sm font-mono font-semibold text-zinc-900 dark:text-zinc-100 bg-transparent border-0 outline-none"
+            inputMode="decimal"
+          />
+          <span className="text-xs text-zinc-400 font-mono">{suffix}</span>
+        </div>
+      </div>
+
+      {/* Track */}
+      <div className="relative h-8 flex items-center">
+        <div className="absolute w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full" />
+        <div
+          className="absolute h-2 bg-zinc-900 dark:bg-zinc-100 rounded-full pointer-events-none"
+          style={{ width: `${pct}%` }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="absolute w-full h-2 opacity-0 cursor-pointer z-10"
+        />
+        {/* Thumb */}
+        <div
+          className="absolute w-5 h-5 bg-white dark:bg-zinc-100 border-2 border-zinc-900 dark:border-zinc-900 rounded-full shadow-md pointer-events-none transition-all"
+          style={{ left: `calc(${pct}% - 10px)` }}
+        />
+      </div>
+
+      {/* Min/Max labels */}
+      <div className="flex justify-between text-[10px] text-zinc-400 -mt-1">
+        <span>{format(min)}</span>
+        <span>{format(max)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Main QuickView ─────────────────────────────────────────────────────────────
 export function QuickView({ onSwitchToAnalysis, onSave }) {
-  const [prixFAI, setPrixFAI] = useState('');
-  const [loyerMensuel, setLoyerMensuel] = useState('');
+  const [prixFAI, setPrixFAI] = useState(87000);
+  const [loyerMensuel, setLoyerMensuel] = useState(530);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
-  const prix = parseFloat(prixFAI) || 0;
-  const loyer = parseFloat(loyerMensuel) || 0;
-
-  const loyerAnnuelBrut = loyer * 12;
-  const rendementBrut = prix > 0 ? (loyerAnnuelBrut / prix) * 100 : null;
+  const loyerAnnuelBrut = loyerMensuel * 12;
+  const rendementBrut = prixFAI > 0 ? (loyerAnnuelBrut / prixFAI) * 100 : null;
 
   const light =
     rendementBrut === null
@@ -36,15 +104,14 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
       ? 'yellow'
       : 'red';
 
-  const hasValues = prix > 0 && loyer > 0;
+  const hasValues = prixFAI > 0 && loyerMensuel > 0;
 
   const handleSwitchToAnalysis = () => {
-    onSwitchToAnalysis({ prixFAI: prix, loyerMensuel: loyer });
+    onSwitchToAnalysis({ prixFAI, loyerMensuel });
   };
 
-  const handleSave = ({ nom, ville, note }) => {
-    // Build minimal inputs for quickview save
-    const inputs = { nom, ville, prixFAI: prix, loyerMensuel: loyer };
+  const handleSave = ({ nom, ville, url, type, note }) => {
+    const inputs = { nom, ville, prixFAI, loyerMensuel };
     const results = compute({
       ...inputs,
       tauxNotaire: 8,
@@ -59,7 +126,7 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
       fraisComptable: 400,
       apport: 15000,
       dureeEmprunt: 20,
-      tauxInteret: 3.8,
+      tauxInteret: 3.5,
       tauxAssurance: 0.3,
     });
     const lights = getLights(results);
@@ -69,6 +136,9 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
       id: uuidv4(),
       nom,
       ville,
+      url,
+      type: type || 'appartement',
+      status: 'a_analyser',
       note,
       createdAt: Date.now(),
       verdict,
@@ -89,60 +159,39 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
           </p>
         </div>
 
-        {/* Inputs */}
-        <div className="space-y-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Prix FAI
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={prixFAI}
-                onChange={(e) => setPrixFAI(e.target.value)}
-                placeholder="87 000"
-                className="input-base pr-8"
-                inputMode="decimal"
-                id="quickview-prix"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-mono text-zinc-400 pointer-events-none">
-                €
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              Loyer mensuel estimé HC
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={loyerMensuel}
-                onChange={(e) => setLoyerMensuel(e.target.value)}
-                placeholder="530"
-                className="input-base pr-14"
-                inputMode="decimal"
-                id="quickview-loyer"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-mono text-zinc-400 pointer-events-none">
-                €/mois
-              </span>
-            </div>
-          </div>
+        {/* Sliders */}
+        <div className="space-y-6">
+          <SliderField
+            label="Prix FAI"
+            value={prixFAI}
+            min={PRIX_MIN}
+            max={PRIX_MAX}
+            step={PRIX_STEP}
+            onChange={setPrixFAI}
+            format={formatK}
+            suffix="€"
+          />
+          <SliderField
+            label="Loyer mensuel HC"
+            value={loyerMensuel}
+            min={LOYER_MIN}
+            max={LOYER_MAX}
+            step={LOYER_STEP}
+            onChange={setLoyerMensuel}
+            format={(v) => `${v} €`}
+            suffix="€/mois"
+          />
         </div>
 
         {/* Result */}
-        {hasValues && rendementBrut !== null ? (
+        {rendementBrut !== null ? (
           <div
             className={`rounded-xl border p-5 text-center transition-all duration-300 ${lightBg[light]}`}
           >
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1">
               Rendement brut
             </p>
-            <p
-              className={`text-5xl font-bold font-mono ${lightColors[light]} tracking-tight`}
-            >
+            <p className={`text-5xl font-bold font-mono ${lightColors[light]} tracking-tight`}>
               {formatPercent(rendementBrut)}
             </p>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-3">
@@ -172,7 +221,7 @@ export function QuickView({ onSwitchToAnalysis, onSave }) {
         ) : (
           <div className="rounded-xl border border-dashed border-zinc-200 dark:border-zinc-700 p-8 text-center text-zinc-300 dark:text-zinc-700">
             <p className="text-4xl mb-2 opacity-50">%</p>
-            <p className="text-sm">Renseignez les deux champs ci-dessus</p>
+            <p className="text-sm">Bougez les curseurs</p>
           </div>
         )}
 

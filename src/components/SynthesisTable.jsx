@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatCurrency } from '../compute';
 
-export function SynthesisTable({ results }) {
+export function SynthesisTable({ results, unset = [] }) {
   const [showChargeDetail, setShowChargeDetail] = useState(false);
 
   const rows = [
@@ -100,6 +100,11 @@ export function SynthesisTable({ results }) {
                 }`}
               >
                 {row.value}
+                {row.label === 'Total charges annuelles' && unset.length > 0 && (
+                  <span className="ml-2 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 align-middle">
+                    ~ Estimé
+                  </span>
+                )}
               </span>
             </div>
 

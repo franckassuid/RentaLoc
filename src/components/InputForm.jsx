@@ -34,7 +34,7 @@ function Section({ title, icon, defaultOpen = false, children }) {
   );
 }
 
-export function InputForm({ inputs, onChange, results }) {
+export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset }) {
   const lights = getLights(results);
   // Un seul tooltip ouvert à la fois
   const [openTooltip, setOpenTooltip] = useState(null);
@@ -70,6 +70,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.prixFAI}
             onChange={onChange}
             suffix="€"
+            isRequired
             {...tip}
           />
           <AutoField
@@ -82,6 +83,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.tauxNotaire}
             onChange={onChange}
             suffix="%"
+            isRequired
             {...tip}
           />
           <InputField
@@ -90,6 +92,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.budgetMobilier}
             onChange={onChange}
             suffix="€"
+            isRequired
             {...tip}
           />
           <AutoField
@@ -103,13 +106,13 @@ export function InputForm({ inputs, onChange, results }) {
       {/* Section 2: Revenus */}
       <Section title="Revenus" icon="💶">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Loyer mensuel HC : pas de tooltip */}
           <InputField
             label="Loyer mensuel HC"
             field="loyerMensuel"
             value={inputs.loyerMensuel}
             onChange={onChange}
             suffix="€/mois"
+            isRequired
           />
           <InputField
             label="Vacance locative"
@@ -117,6 +120,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.vacanceMois}
             onChange={onChange}
             suffix="mois/an"
+            isRequired
             {...tip}
           />
           <AutoField
@@ -131,11 +135,14 @@ export function InputForm({ inputs, onChange, results }) {
       <Section title="Charges annuelles" icon="💸">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField
-            label="Charges copropriété"
+            label="Charges copropriété (annuelles)"
             field="chargesCopro"
             value={inputs.chargesCopro}
             onChange={onChange}
             suffix="€/an"
+            isOptional
+            isUnset={unset.includes('chargesCopro')}
+            onToggleUnset={onToggleUnset}
             {...tip}
           />
           <InputField
@@ -144,6 +151,9 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.taxeFonciere}
             onChange={onChange}
             suffix="€/an"
+            isOptional
+            isUnset={unset.includes('taxeFonciere')}
+            onToggleUnset={onToggleUnset}
             {...tip}
           />
           <InputField
@@ -152,6 +162,9 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.cfe}
             onChange={onChange}
             suffix="€/an"
+            isOptional
+            isUnset={unset.includes('cfe')}
+            onToggleUnset={onToggleUnset}
             {...tip}
           />
           <InputField
@@ -160,6 +173,9 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.assurancePNO}
             onChange={onChange}
             suffix="€/an"
+            isOptional
+            isUnset={unset.includes('assurancePNO')}
+            onToggleUnset={onToggleUnset}
             {...tip}
           />
           <InputField
@@ -168,6 +184,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.fraisGestion}
             onChange={onChange}
             suffix="%"
+            isRequired
             {...tip}
           />
           <InputField
@@ -176,6 +193,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.provisionTravaux}
             onChange={onChange}
             suffix="€/an"
+            isRequired
             {...tip}
           />
           <InputField
@@ -185,6 +203,7 @@ export function InputForm({ inputs, onChange, results }) {
             onChange={onChange}
             suffix="€/an"
             className="md:col-span-2"
+            isRequired
             {...tip}
           />
         </div>
@@ -199,6 +218,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.apport}
             onChange={onChange}
             suffix="€"
+            isRequired
             {...tip}
           />
           <AutoField
@@ -212,6 +232,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.dureeEmprunt}
             onChange={onChange}
             suffix="ans"
+            isRequired
           />
           <InputField
             label="Taux d'intérêt"
@@ -219,6 +240,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.tauxInteret}
             onChange={onChange}
             suffix="%"
+            isRequired
             {...tip}
           />
           <InputField
@@ -227,6 +249,7 @@ export function InputForm({ inputs, onChange, results }) {
             value={inputs.tauxAssurance}
             onChange={onChange}
             suffix="%/an"
+            isRequired
             {...tip}
           />
           <AutoField
