@@ -42,14 +42,26 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
       appliedPrefill.current = true;
       // Strip _bien metadata before using as form inputs
       const { _bien: _, ...cleanInputs } = prefill || {};
-      resetInputs({ ...defaults, ...cleanInputs });
-      if (_bien?.unset) {
-        setUnset(_bien.unset);
+      const provTouched = cleanInputs._provModif !== undefined ? cleanInputs._provModif : false;
+      const initProv = provTouched ? cleanInputs.provisionTravaux : Math.round((cleanInputs.prixFAI || defaults.prixFAI) * 0.01);
+      resetInputs({ ...defaults, ...cleanInputs, provisionTravaux: initProv, _provModif: provTouched });
+      if (bienMeta?.unset) {
+        setUnset(bienMeta.unset);
       } else {
         setUnset([]);
       }
     }
-  }, [prefill]);
+  }, [prefill, defaults, resetInputs, bienMeta]);
+
+  // Auto-calculate provisionTravaux if it hasn't been modified by user
+  useEffect(() => {
+    if (!inputs._provModif) {
+      const autoProv = Math.round((inputs.prixFAI || 0) * 0.01);
+      if (inputs.provisionTravaux !== autoProv) {
+        updateField('provisionTravaux', autoProv);
+      }
+    }
+  }, [inputs.prixFAI, inputs._provModif, inputs.provisionTravaux, updateField]);
 
   // Persist unset to localStorage
   useEffect(() => {
@@ -64,6 +76,8 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
   if (unset.includes('taxeFonciere')) subInputs.taxeFonciere = inputs.prixFAI * 0.01;
   if (unset.includes('cfe')) subInputs.cfe = 250;
   if (unset.includes('assurancePNO')) subInputs.assurancePNO = 150;
+  if (unset.includes('fraisGestion')) subInputs.fraisGestion = 0;
+  if (unset.includes('fraisComptable')) subInputs.fraisComptable = 0;
 
   // Safe compute: treat '' as 0 to avoid NaN
   const safeInputs = { ...subInputs };
@@ -71,7 +85,7 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
     if (safeInputs[k] === '') safeInputs[k] = 0;
   }
 
-  const reqFields = ['prixFAI', 'loyerMensuel', 'tauxNotaire', 'budgetMobilier', 'vacanceMois', 'fraisGestion', 'provisionTravaux', 'fraisComptable', 'apport', 'dureeEmprunt', 'tauxInteret', 'tauxAssurance'];
+  const reqFields = ['prixFAI', 'loyerMensuel', 'tauxNotaire', 'budgetMobilier', 'vacanceMois', 'provisionTravaux', 'apport', 'dureeEmprunt', 'tauxInteret', 'tauxAssurance'];
   const isMissingReq = reqFields.some((f) => inputs[f] === '');
 
   // "Le calcul ne tourne pas" -> we can just pause the results update if invalid, but React needs something.
@@ -111,105 +125,139 @@ export function FullAnalysis({ prefill, onSave, effectiveDefaults }) {
     setShowResetConfirm(false);
   };
 
+  const [mobileTab, setMobileTab] = useState('resultats'); // 'resultats', 'saisie', 'nego', 'checklist'
+  const [checklistOpen, setChecklistOpen] = useState(false);
+
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-14 pb-8">
-
-      {/*
-        ── ZONE STICKY ──────────────────────────────────────────────────────────
-        Verdict + MetricsCards fixés sous le header.
-        top-14 = 56px (hauteur du header fixe).
-        -mx-4 px-4 étire jusqu'aux bords pour un fond plein.
-      */}
-      <div className="sticky top-14 z-20 -mx-4 px-4 pt-2 pb-2 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800/60 print:relative print:top-auto print:border-0 print:bg-transparent">
-
-        {/* Row 1 : Verdict + actions */}
-        <VerdictBanner results={results} nom={inputs.nom} ville={inputs.ville} unsetCount={unset.length}>
-          <ExportButtons inputs={inputs} results={results} note={note} />
-
-          {/* Save — icône seule */}
-          <button
-            onClick={() => setShowSaveModal(true)}
-            disabled={isMissingReq}
-            title="Sauvegarder"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors no-print text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            💾
-          </button>
-
-          {/* Reset — icône seule */}
-          <button
-            onClick={() => setShowResetConfirm(true)}
-            title="Réinitialiser l'analyse"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors no-print text-sm"
-          >
-            ↺
-          </button>
-        </VerdictBanner>
-
-        {/* Row 2 : MetricsCards (collapsible) */}
-        {metricsOpen && (
-          <div className="mt-2 pb-1">
-            <MetricsCards results={results} />
+    <div className="max-w-7xl mx-auto px-4 pt-14 pb-[80px] md:pb-8">
+      <div className="md:flex md:gap-8 mt-4 md:mt-8 items-start">
+        
+        {/* COLONNE GAUCHE (Saisie) */}
+        <div className={`w-full md:w-[45%] space-y-4 ${mobileTab === 'saisie' ? 'block' : 'hidden md:block'}`}>
+          <div className="card no-print">
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Note personnelle (DPE, état général, contact agent…)"
+              className="w-full text-sm text-zinc-600 dark:text-zinc-400 bg-transparent border-0 outline-none resize-none placeholder-zinc-300 dark:placeholder-zinc-700"
+              rows={2}
+            />
           </div>
-        )}
+          <div className="no-print">
+            <InputForm 
+              inputs={inputs} 
+              onChange={updateField} 
+              results={results} 
+              unset={unset}
+              onToggleUnset={toggleUnset}
+            />
+          </div>
+        </div>
 
-        {/* Toggle button — centered below the tiles */}
-        <button
-          onClick={() => setMetricsOpen((v) => !v)}
-          title={metricsOpen ? 'Réduire les tuiles' : 'Afficher les tuiles'}
-          className="w-full flex items-center justify-center gap-1 py-1 text-[11px] text-zinc-400 dark:text-zinc-600 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors no-print"
-        >
-          <span className="transition-transform duration-200" style={{ display: 'inline-block', transform: metricsOpen ? 'rotate(0deg)' : 'rotate(180deg)' }}>▲</span>
-          <span>{metricsOpen ? 'Réduire' : 'Afficher les tuiles'}</span>
-        </button>
+        {/* COLONNE DROITE (Résultats & Outils) */}
+        <div className={`w-full md:w-[55%] md:sticky md:top-20 space-y-4`}>
+            
+          {/* VUE RESULTATS */}
+          <div className={`space-y-4 ${mobileTab === 'resultats' ? 'block' : 'hidden md:block'}`}>
+            <VerdictBanner results={results} nom={inputs.nom} ville={inputs.ville} unsetCount={unset.length}>
+              <ExportButtons inputs={inputs} results={results} note={note} />
+              <button
+                onClick={() => setShowSaveModal(true)}
+                disabled={isMissingReq}
+                title="Sauvegarder"
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors no-print text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                💾
+              </button>
+              <button
+                onClick={() => setShowResetConfirm(true)}
+                title="Réinitialiser l'analyse"
+                className="flex items-center justify-center w-8 h-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-500 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors no-print text-sm"
+              >
+                ↺
+              </button>
+            </VerdictBanner>
+
+            <MetricsCards results={results} />
+            <SynthesisTable results={results} unset={unset} />
+          </div>
+
+          {/* VUE NEGO */}
+          <div className={`no-print space-y-4 ${mobileTab === 'nego' ? 'block' : 'hidden md:block'}`}>
+            <NegotiationSimulator inputs={inputs} />
+          </div>
+
+          {/* VUE CHECKLIST */}
+          <div className={`no-print space-y-4 ${mobileTab === 'checklist' ? 'block' : 'hidden md:block'}`}>
+            <MissingDataChecklist 
+              unset={unset} 
+              onCheck={(field) => {
+                toggleUnset(field);
+                if (window.innerWidth < 768) setMobileTab('saisie');
+              }} 
+            />
+            {bienMeta?.id ? (
+              <div className="card">
+                <button type="button" onClick={() => setChecklistOpen((v) => !v)} className="w-full flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📋</span>
+                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Checklist due diligence</span>
+                  </div>
+                  <span className="text-zinc-400 text-sm transition-transform duration-200" style={{ transform: checklistOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                </button>
+                {checklistOpen && (
+                  <div className="mt-4 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                    <Checklist bien={{ id: bienMeta.id, status: bienMeta.status ?? 'a_analyser', type: bienMeta.type ?? 'appartement' }} />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="card text-center py-6">
+                <span className="text-2xl block mb-2">📌</span>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  Sauvegardez ce bien pour débloquer la checklist de due diligence complète.
+                </p>
+              </div>
+            )}
+          </div>
+            
+        </div>
       </div>
 
-      {/* ── CONTENU SCROLLABLE ───────────────────────────────────────────────── */}
-      <div className="space-y-4 mt-4">
-        {/* Note personnelle */}
-        <div className="card no-print">
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Note personnelle (DPE, état général, contact agent…)"
-            className="w-full text-sm text-zinc-600 dark:text-zinc-400 bg-transparent border-0 outline-none resize-none placeholder-zinc-300 dark:placeholder-zinc-700"
-            rows={2}
-          />
-        </div>
-
-        {/* Synthesis table — print-visible */}
-        <SynthesisTable results={results} unset={unset} />
-
-        <MissingDataChecklist 
-          unset={unset} 
-          onCheck={(field) => {
-            toggleUnset(field);
-            // Optional: focus the input if we wanted, but removing from unset is enough to un-gray it
-          }} 
-        />
-
-        {/* Negotiation simulator */}
-        <div className="no-print">
-          <NegotiationSimulator inputs={inputs} />
-        </div>
-
-        {/* Checklist — visible when a saved bien has an id and status */}
-        {bienMeta?.id && (
-          <div className="no-print">
-            <Checklist bien={{ id: bienMeta.id, status: bienMeta.status ?? 'a_analyser', type: bienMeta.type ?? 'appartement' }} />
-          </div>
-        )}
-
-        {/* Form — hidden on print */}
-        <div className="no-print">
-          <InputForm 
-            inputs={inputs} 
-            onChange={updateField} 
-            results={results} 
-            unset={unset}
-            onToggleUnset={toggleUnset}
-          />
-        </div>
+      {/* MOBILE BOTTOM NAV */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full h-[60px] bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-around z-50">
+        <button 
+          onClick={() => setMobileTab('resultats')} 
+          className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${mobileTab === 'resultats' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`}
+        >
+          {mobileTab === 'resultats' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-zinc-900 dark:bg-zinc-100 rounded-b-full"></div>}
+          <span className="text-xl mb-0.5">📊</span>
+          <span className="text-[10px] font-medium">Résultats</span>
+        </button>
+        <button 
+          onClick={() => setMobileTab('saisie')} 
+          className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${mobileTab === 'saisie' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`}
+        >
+          {mobileTab === 'saisie' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-zinc-900 dark:bg-zinc-100 rounded-b-full"></div>}
+          <span className="text-xl mb-0.5">✏️</span>
+          <span className="text-[10px] font-medium">Saisie</span>
+        </button>
+        <button 
+          onClick={() => setMobileTab('nego')} 
+          className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${mobileTab === 'nego' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`}
+        >
+          {mobileTab === 'nego' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-zinc-900 dark:bg-zinc-100 rounded-b-full"></div>}
+          <span className="text-xl mb-0.5">💰</span>
+          <span className="text-[10px] font-medium">Négo</span>
+        </button>
+        <button 
+          onClick={() => setMobileTab('checklist')} 
+          className={`flex flex-col items-center justify-center w-full h-full relative transition-colors ${mobileTab === 'checklist' ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 dark:text-zinc-600'}`}
+        >
+          {mobileTab === 'checklist' && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-zinc-900 dark:bg-zinc-100 rounded-b-full"></div>}
+          <span className="text-xl mb-0.5">📋</span>
+          <span className="text-[10px] font-medium">Checklist</span>
+        </button>
       </div>
 
       {/* Reset confirm dialog */}

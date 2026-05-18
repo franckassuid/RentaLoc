@@ -8,7 +8,8 @@ const ACTIONS = {
 };
 
 export function MissingDataChecklist({ unset, onCheck }) {
-  if (!unset || unset.length === 0) return null;
+  const missingItems = unset?.filter((field) => ACTIONS[field]) || [];
+  if (missingItems.length === 0) return null;
 
   return (
     <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800/30 rounded-xl p-4 mt-4 no-print">
@@ -19,7 +20,7 @@ export function MissingDataChecklist({ unset, onCheck }) {
         </h4>
       </div>
       <div className="space-y-2">
-        {unset.map((field) => (
+        {missingItems.map((field) => (
           <label key={field} className="flex items-start gap-2.5 cursor-pointer group">
             <input
               type="checkbox"

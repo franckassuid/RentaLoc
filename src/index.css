@@ -15,6 +15,7 @@
     @apply bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100;
     @apply font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
   }
 
   input[type="number"]::-webkit-inner-spin-button,

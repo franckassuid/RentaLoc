@@ -39,8 +39,14 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
   // Un seul tooltip ouvert à la fois
   const [openTooltip, setOpenTooltip] = useState(null);
 
-  // Raccourci pour passer les props tooltip à chaque InputField
   const tip = { openTooltip, setOpenTooltip };
+
+  const handleChangeWrapper = (field, val) => {
+    if (field === 'provisionTravaux') {
+      onChange('_provModif', true);
+    }
+    onChange(field, val);
+  };
 
   return (
     <div className="space-y-3">
@@ -68,7 +74,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Prix FAI"
             field="prixFAI"
             value={inputs.prixFAI}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€"
             isRequired
             {...tip}
@@ -81,7 +87,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Taux notaire"
             field="tauxNotaire"
             value={inputs.tauxNotaire}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="%"
             isRequired
             {...tip}
@@ -90,7 +96,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Ameublement / rafraîchissement"
             field="budgetMobilier"
             value={inputs.budgetMobilier}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€"
             isRequired
             {...tip}
@@ -110,7 +116,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Loyer mensuel HC"
             field="loyerMensuel"
             value={inputs.loyerMensuel}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/mois"
             isRequired
           />
@@ -118,7 +124,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Vacance locative"
             field="vacanceMois"
             value={inputs.vacanceMois}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="mois/an"
             isRequired
             {...tip}
@@ -138,7 +144,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Charges copropriété (annuelles)"
             field="chargesCopro"
             value={inputs.chargesCopro}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/an"
             isOptional
             isUnset={unset.includes('chargesCopro')}
@@ -149,7 +155,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Taxe foncière"
             field="taxeFonciere"
             value={inputs.taxeFonciere}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/an"
             isOptional
             isUnset={unset.includes('taxeFonciere')}
@@ -160,7 +166,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="CFE"
             field="cfe"
             value={inputs.cfe}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/an"
             isOptional
             isUnset={unset.includes('cfe')}
@@ -171,7 +177,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Assurance PNO"
             field="assurancePNO"
             value={inputs.assurancePNO}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/an"
             isOptional
             isUnset={unset.includes('assurancePNO')}
@@ -182,16 +188,20 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Frais de gestion"
             field="fraisGestion"
             value={inputs.fraisGestion}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="%"
-            isRequired
+            isOptional
+            isUnset={unset.includes('fraisGestion')}
+            onToggleUnset={onToggleUnset}
+            unsetLabel="Pas d'agence ?"
+            unsetEstim="Sans agence"
             {...tip}
           />
           <InputField
             label="Provision travaux"
             field="provisionTravaux"
             value={inputs.provisionTravaux}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/an"
             isRequired
             {...tip}
@@ -200,10 +210,14 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Frais comptable"
             field="fraisComptable"
             value={inputs.fraisComptable}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€/an"
             className="md:col-span-2"
-            isRequired
+            isOptional
+            isUnset={unset.includes('fraisComptable')}
+            onToggleUnset={onToggleUnset}
+            unsetLabel="Pas de comptable ?"
+            unsetEstim="Sans comptable"
             {...tip}
           />
         </div>
@@ -216,7 +230,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Apport"
             field="apport"
             value={inputs.apport}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="€"
             isRequired
             {...tip}
@@ -230,7 +244,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Durée"
             field="dureeEmprunt"
             value={inputs.dureeEmprunt}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="ans"
             isRequired
           />
@@ -238,7 +252,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Taux d'intérêt"
             field="tauxInteret"
             value={inputs.tauxInteret}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="%"
             isRequired
             {...tip}
@@ -247,7 +261,7 @@ export function InputForm({ inputs, onChange, results, unset = [], onToggleUnset
             label="Assurance emprunteur"
             field="tauxAssurance"
             value={inputs.tauxAssurance}
-            onChange={onChange}
+            onChange={handleChangeWrapper}
             suffix="%/an"
             isRequired
             {...tip}

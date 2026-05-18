@@ -90,6 +90,8 @@ export function NegotiationSimulator({ inputs }) {
   const rBudg  = lightBudg(simResults.budgetTotal);
   const verdict = getVerdict({ lightRendement: rRend, lightCashflow: rCash, lightBudget: rBudg });
 
+  const baseVerdict = getVerdict(getLights(compute(inputs)));
+
   const goPrice = useMemo(() => open ? findGOPrice(inputs) : null, [inputs, open]);
 
   const goPriceDiff = goPrice !== null && goPrice !== undefined
@@ -161,9 +163,18 @@ export function NegotiationSimulator({ inputs }) {
             {verdict === 'GO' ? '✅' : verdict === 'ATTENTION' ? '⚠️' : '🛑'} {verdict}
           </div>
 
-          {/* GO price block */}
+          {/* GO block logic */}
           <div className="border border-zinc-100 dark:border-zinc-800 rounded-xl p-4">
-            {goPrice !== null && goPrice !== undefined ? (
+            {baseVerdict === 'GO' ? (
+              <>
+                <p className="text-sm text-green-700 dark:text-green-400 leading-snug">
+                  ✅ Ce bien est déjà en GO au prix actuel.
+                </p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Pas besoin de négocier pour atteindre vos objectifs de rentabilité.
+                </p>
+              </>
+            ) : goPrice !== null && goPrice !== undefined ? (
               <>
                 <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-snug">
                   💡 <strong>Prix maximum pour un GO complet :</strong>{' '}

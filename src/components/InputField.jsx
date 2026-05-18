@@ -28,6 +28,8 @@ export function InputField({
   isRequired = false,
   isOptional = false,
   isUnset = false,
+  unsetLabel = 'Non renseigné ?',
+  unsetEstim = '~ Estimé',
   onToggleUnset,
 }) {
   const tooltip = TOOLTIPS[field];
@@ -56,28 +58,44 @@ export function InputField({
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <div className="flex items-center gap-1.5">
-        {light && (
-          <span
-            className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${lightColors[light] || 'bg-zinc-400'}`}
-          />
-        )}
-        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-tight">
-          {label}
-        </label>
-        {tooltip && setOpenTooltip && (
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          {light && (
+            <span
+              className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${lightColors[light] || 'bg-zinc-400'}`}
+            />
+          )}
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-tight">
+            {label}
+          </label>
+          {tooltip && setOpenTooltip && (
+            <button
+              type="button"
+              onClick={toggleTip}
+              className={`text-xs leading-none transition-colors flex-shrink-0 ${
+                showTip
+                  ? 'text-zinc-700 dark:text-zinc-300'
+                  : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+              }`}
+              aria-label={`Aide pour ${label}`}
+              aria-expanded={showTip}
+            >
+              ⓘ
+            </button>
+          )}
+        </div>
+        
+        {isOptional && (
           <button
             type="button"
-            onClick={toggleTip}
-            className={`text-xs leading-none transition-colors flex-shrink-0 ${
-              showTip
-                ? 'text-zinc-700 dark:text-zinc-300'
-                : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+            onClick={() => onToggleUnset(field)}
+            className={`text-[10px] font-medium px-2 py-0.5 rounded-full transition-colors focus:outline-none ${
+              isUnset 
+                ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
             }`}
-            aria-label={`Aide pour ${label}`}
-            aria-expanded={showTip}
           >
-            ⓘ
+            {isUnset ? unsetEstim : unsetLabel}
           </button>
         )}
       </div>
@@ -114,18 +132,6 @@ export function InputField({
 
       {showError && (
         <span className="text-xs text-red-500 mt-0.5">Valeur requise</span>
-      )}
-
-      {isOptional && (
-        <label className="flex items-center gap-1.5 mt-1 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isUnset}
-            onChange={() => onToggleUnset(field)}
-            className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-600 accent-zinc-900 dark:accent-zinc-100 cursor-pointer"
-          />
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">Non renseigné</span>
-        </label>
       )}
     </div>
   );
