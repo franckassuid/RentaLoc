@@ -1,13 +1,25 @@
 import { useState } from 'react';
-import { useProfile, PROFILE_FIELDS, PROFILE_DEFAULTS } from '../hooks/useProfile';
+import { useProfile, PROFILE_FIELDS, PROFILE_DEFAULTS, SEUILS_DEFAULTS, resetOnboarding } from '../hooks/useProfile';
 
 export function ProfileScreen() {
-  const { profile, updateProfileField, resetProfile } = useProfile();
+  const { profile, updateProfileField, updateSeuil, resetProfile } = useProfile();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleChange = (field, raw) => {
     const num = parseFloat(raw);
     updateProfileField(field, isNaN(num) ? 0 : num);
+  };
+
+  const handleSeuilChange = (field, raw) => {
+    const num = parseFloat(raw);
+    updateSeuil(field, isNaN(num) ? 0 : num);
+  };
+
+  const seuils = profile.seuils ?? SEUILS_DEFAULTS;
+
+  const doResetOnboarding = () => {
+    resetOnboarding();
+    window.location.reload();
   };
 
   return (
@@ -70,6 +82,42 @@ export function ProfileScreen() {
         </div>
       </div>
 
+      {/* Seuils */}
+      <div>
+        <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-1">
+          Seuils de rentabilité
+        </h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">
+          Définissent les feux verts/oranges/rouges dans vos analyses.
+        </p>
+        <div className="space-y-3">
+          <ProfileField
+            field={{ key: 'rendementBrutMin', label: 'Rendement brut minimum', suffix: '%' }}
+            value={seuils.rendementBrutMin}
+            defaultValue={SEUILS_DEFAULTS.rendementBrutMin}
+            onChange={handleSeuilChange}
+          />
+          <ProfileField
+            field={{ key: 'rendementBrutAttention', label: 'Rendement brut (Attention)', suffix: '%' }}
+            value={seuils.rendementBrutAttention}
+            defaultValue={SEUILS_DEFAULTS.rendementBrutAttention}
+            onChange={handleSeuilChange}
+          />
+          <ProfileField
+            field={{ key: 'cashflowMin', label: 'Cashflow minimum', suffix: '€' }}
+            value={seuils.cashflowMin}
+            defaultValue={SEUILS_DEFAULTS.cashflowMin}
+            onChange={handleSeuilChange}
+          />
+          <ProfileField
+            field={{ key: 'budgetMax', label: 'Budget maximum', suffix: '€', step: 1000 }}
+            value={seuils.budgetMax}
+            defaultValue={SEUILS_DEFAULTS.budgetMax}
+            onChange={handleSeuilChange}
+          />
+        </div>
+      </div>
+
       {/* Info banner */}
       <div className="flex items-start gap-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4">
         <span className="text-lg flex-shrink-0">💡</span>
@@ -117,6 +165,16 @@ export function ProfileScreen() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Reset Onboarding */}
+      <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+        <button
+          onClick={doResetOnboarding}
+          className="w-full py-3 text-sm font-medium text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+        >
+          Refaire l'onboarding
+        </button>
       </div>
     </div>
   );

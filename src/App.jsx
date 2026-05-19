@@ -8,6 +8,8 @@ import { FullAnalysis } from './components/FullAnalysis';
 import { Pipeline } from './components/Pipeline';
 import { SavedBiens } from './components/SavedBiens';
 import { ProfileScreen } from './components/ProfileScreen';
+import { Onboarding } from './components/Onboarding';
+import { isOnboardingDone } from './hooks/useProfile';
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
@@ -17,6 +19,7 @@ export default function App() {
 
   const [showSaved, setShowSaved] = useState(false);
   const [prefill, setPrefill] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(!isOnboardingDone());
 
   const handleModeChange = (newMode) => {
     setMode(newMode);
@@ -102,6 +105,10 @@ export default function App() {
           onDelete={deleteBien}
           onClose={() => setShowSaved(false)}
         />
+      )}
+
+      {showOnboarding && (
+        <Onboarding onFinish={() => setShowOnboarding(false)} />
       )}
     </div>
   );

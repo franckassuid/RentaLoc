@@ -22,9 +22,27 @@ export const DEFAULTS = {
 
 // ─── Thresholds ───────────────────────────────────────────────────────────────
 export const THRESHOLDS = {
-  rendementBrut: { green: 8, yellow: 7 },   // ≥8 vert, 7-8 jaune, <7 rouge
-  cashflow: { green: 0, yellow: -100 },       // >0 vert, -100-0 jaune, <-100 rouge
-  budgetTotal: { green: 100000 },             // ≤100k vert, >100k rouge
+  get rendementBrut() {
+    try {
+      const p = JSON.parse(localStorage.getItem('rentaloc_profil'));
+      if (p?.seuils) return { green: p.seuils.rendementBrutMin, yellow: p.seuils.rendementBrutAttention };
+    } catch {}
+    return { green: 8, yellow: 7 };
+  },
+  get cashflow() {
+    try {
+      const p = JSON.parse(localStorage.getItem('rentaloc_profil'));
+      if (p?.seuils) return { green: 0, yellow: p.seuils.cashflowMin };
+    } catch {}
+    return { green: 0, yellow: -100 };
+  },
+  get budgetTotal() {
+    try {
+      const p = JSON.parse(localStorage.getItem('rentaloc_profil'));
+      if (p?.seuils) return { green: p.seuils.budgetMax };
+    } catch {}
+    return { green: 100000 };
+  }
 };
 
 // ─── Tooltips ─────────────────────────────────────────────────────────────────

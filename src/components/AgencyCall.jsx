@@ -42,6 +42,8 @@ export function AgencyCall({
   const [openSection, setOpenSection] = useState('calc');
   const qualRef = useRef(null);
   const noteRef = useRef(null);
+  const calcAdvanced = useRef(false);
+  const qualAdvanced = useRef(false);
 
   // Compute filled and total counts for the progress indicator
   const stats = useMemo(() => {
@@ -77,9 +79,10 @@ export function AgencyCall({
     };
   }, [inputs, unset, qualite, type]);
 
-  // Auto-advance: when calc section is done, open qual and scroll to it
+  // Auto-advance: when calc section completes for the first time, open qual
   useEffect(() => {
-    if (stats.calc.isDone && openSection === 'calc') {
+    if (stats.calc.isDone && !calcAdvanced.current) {
+      calcAdvanced.current = true;
       const t = setTimeout(() => {
         setOpenSection('qual');
         setTimeout(() => {
@@ -88,17 +91,18 @@ export function AgencyCall({
       }, 400);
       return () => clearTimeout(t);
     }
-  }, [stats.calc.isDone, openSection]);
+  }, [stats.calc.isDone]);
 
-  // Auto-scroll to notes when qual section is done
+  // Auto-scroll to notes when qual section completes for the first time
   useEffect(() => {
-    if (stats.qual.isDone && openSection === 'qual') {
+    if (stats.qual.isDone && !qualAdvanced.current) {
+      qualAdvanced.current = true;
       const t = setTimeout(() => {
         noteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 400);
       return () => clearTimeout(t);
     }
-  }, [stats.qual.isDone, openSection]);
+  }, [stats.qual.isDone]);
 
   // Handle calculator input updates (charge / TF / Loyer HC)
   // Ensures they immediately get un-marked from the "non renseigné" unset list
